@@ -1,0 +1,105 @@
+{% extends 'control-tower/_cp/_layout' %}
+
+{% block dashboard %}
+    <div class="ct-grid ct-grid--stats" style="margin-bottom: 20px;">
+        <div class="ct-stat-card">
+            <span class="ct-stat-card__label">Active Editors</span>
+            <span class="ct-stat-card__value" id="ct-editors-count">{{ editors|length }}</span>
+        </div>
+        <div class="ct-stat-card">
+            <span class="ct-stat-card__label">Collisions</span>
+            <span class="ct-stat-card__value">{{ collisions|length }}</span>
+            {% if collisions|length %}
+                <span class="ct-collision-badge">Multiple editors on same content</span>
+            {% endif %}
+        </div>
+    </div>
+
+    {% if collisions|length %}
+        <div class="ct-panel" style="margin-bottom: 20px;">
+            <div class="ct-panel__header">
+                <h3 class="ct-panel__title">Collision Warnings</h3>
+            </div>
+            <div class="ct-panel__body ct-panel__body--flush">
+                <table class="ct-table">
+                    <thead>
+                        <tr><th>Element</th><th>Type</th><th>Section</th><th>Editors</th></tr>
+                    </thead>
+                    <tbody>
+                        {% for c in collisions %}
+                            <tr>
+                                <td>#{{ c.elementId }}</td>
+                                <td>{{ c.elementType }}</td>
+                                <td>{{ c.sectionHandle ?? '—' }}</td>
+                                <td>{{ c.editorCount }} editors (IDs: {{ c.userIds }})</td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    {% endif %}
+
+    <div class="ct-panel">
+        <div class="ct-panel__header">
+            <h3 class="ct-panel__title">Active Editor Sessions</h3>
+        </div>
+        <div class="ct-panel__body ct-panel__body--flush">
+            <table class="ct-table">
+                <thead>
+                    <tr><th>Editor</th><th>Action</th><th>Section</th><th>Element</th><th>Draft</th><th>Started</th><th>Last Seen</th></tr>
+                </thead>
+                <tbody id="ct-editors-tbody">
+                    {% for editor in editors %}
+                        <tr>
+                            <td>
+                                <div class="ct-editor-row">
+                                    {% if editor.photoUrl %}
+                                        <img class="ct-avatar" src="{{ editor.photoUrl }}" alt="">
+                                    {% else %}
+                                        <span class="ct-avatar ct-avatar--placeholder">{{ editor.userName[0:1]|upper }}</span>
+                                    {% endif %}
+                                    <div class="ct-editor-info">
+                                        <span class="ct-editor-name">{{ editor.userName }}</span>
+                                        <span class="ct-editor-action">{{ editor.email }}</span>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>{{ editor.action }}</td>
+                            <td>{{ editor.sectionHandle ?? '—' }}</td>
+                            <td>{{ editor.elementId ? '#' ~ editor.elementId : '—' }}</td>
+                            <td>{{ editor.draftId ? '#' ~ editor.draftId : '—' }}</td>
+                            <td>{{ editor.startedAt }}</td>
+                            <td>{{ editor.lastSeenAt }}</td>
+                        </tr>
+                    {% else %}
+                        <tr><td colspan="7" class="ct-empty">No active editors</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    {% if draftCounts|length %}
+        <div class="ct-panel" style="margin-top: 20px;">
+            <div class="ct-panel__header">
+                <h3 class="ct-panel__title">Draft Counts by User</h3>
+            </div>
+            <div class="ct-panel__body ct-panel__body--flush">
+                <table class="ct-table">
+                    <thead>
+                        <tr><th>User ID</th><th>Open Drafts</th></tr>
+                    </thead>
+                    <tbody>
+                        {% for row in draftCounts %}
+                            <tr>
+                                <td>{{ row.userId }}</td>
+                                <td>{{ row.draftCount }}</td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    {% endif %}
+{% endblock %}

@@ -1,0 +1,92 @@
+{% extends 'control-tower/_cp/_layout' %}
+
+{% block dashboard %}
+    <div class="ct-grid ct-grid--stats" style="margin-bottom: 20px;">
+        <div class="ct-stat-card">
+            <span class="ct-stat-card__label">Server Health</span>
+            <span id="ct-server-health" class="ct-badge ct-badge--{{ serverHealth }}">
+                <span class="ct-badge__dot"></span>
+                <span class="ct-badge__label">{{ serverHealth|capitalize }}</span>
+            </span>
+        </div>
+        <div class="ct-stat-card">
+            <span class="ct-stat-card__label">Craft Version</span>
+            <span class="ct-stat-card__value" style="font-size: 18px;">{{ snapshot.craftVersion }}</span>
+        </div>
+        <div class="ct-stat-card">
+            <span class="ct-stat-card__label">PHP Version</span>
+            <span class="ct-stat-card__value" style="font-size: 18px;">{{ snapshot.phpVersion }}</span>
+        </div>
+        <div class="ct-stat-card">
+            <span class="ct-stat-card__label">Environment</span>
+            <span class="ct-stat-card__value" style="font-size: 18px;">{{ snapshot.environment }}</span>
+        </div>
+        <div class="ct-stat-card">
+            <span class="ct-stat-card__label">Dev Mode</span>
+            <span class="ct-stat-card__value" style="font-size: 18px;">{{ snapshot.devMode ? 'On' : 'Off' }}</span>
+        </div>
+    </div>
+
+    <div class="ct-grid ct-grid--2">
+        {# Resource bars #}
+        <div class="ct-panel">
+            <div class="ct-panel__header">
+                <h3 class="ct-panel__title">Resource Usage</h3>
+            </div>
+            <div class="ct-panel__body">
+                {% set metrics = [
+                    { label: 'CPU', value: snapshot.cpuPercent, suffix: '%' },
+                    { label: 'Memory', value: snapshot.memoryPercent, suffix: '%' },
+                    { label: 'Disk', value: snapshot.diskPercent, suffix: '%' },
+                ] %}
+
+                {% for m in metrics %}
+                    {% set val = m.value ?? 0 %}
+                    {% set color = val > 90 ? 'red' : (val > 70 ? 'yellow' : 'green') %}
+                    <div class="ct-metric-bar">
+                        <span class="ct-metric-bar__label">{{ m.label }}</span>
+                        <div class="ct-metric-bar__track">
+                            <div class="ct-metric-bar__fill ct-metric-bar__fill--{{ color }}" style="width: {{ val }}%;"></div>
+                        </div>
+                        <span class="ct-metric-bar__value">{{ val is not null ? val ~ m.suffix : 'N/A' }}</span>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        {# System info #}
+        <div class="ct-panel">
+            <div class="ct-panel__header">
+                <h3 class="ct-panel__title">System Details</h3>
+            </div>
+            <div class="ct-panel__body">
+                <div class="ct-info-grid">
+                    <dt>Load Average (1m)</dt>
+                    <dd>{{ snapshot.load1 ?? 'N/A' }}</dd>
+
+                    <dt>PHP Memory Usage</dt>
+                    <dd>{{ (snapshot.phpMemoryUsage / 1048576)|round(1) }} MB</dd>
+
+                    <dt>PHP Memory Limit</dt>
+                    <dd>{{ snapshot.phpMemoryLimit }}</dd>
+
+                    <dt>DB Ping</dt>
+                    <dd>{{ snapshot.dbPingMs is not null ? snapshot.dbPingMs ~ ' ms' : 'N/A' }}</dd>
+
+                    <dt>Queue Backlog</dt>
+                    <dd>{{ snapshot.queueBacklog }}</dd>
+
+                    <dt>Uptime</dt>
+                    <dd>{{ snapshot.uptime ?? 'N/A' }}</dd>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="ct-toolbar" style="margin-top: 20px;">
+        <button class="ct-period-btn active" data-period="15m">15m</button>
+        <button class="ct-period-btn" data-period="1h">1h</button>
+        <button class="ct-period-btn" data-period="24h">24h</button>
+        <button class="ct-period-btn" data-period="7d">7d</button>
+    </div>
+{% endblock %}

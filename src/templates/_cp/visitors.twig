@@ -1,0 +1,91 @@
+{% extends 'control-tower/_cp/_layout' %}
+
+{% block dashboard %}
+    <div class="ct-grid ct-grid--stats" style="margin-bottom: 20px;">
+        <div class="ct-stat-card">
+            <span class="ct-stat-card__label">Active Visitors</span>
+            <span class="ct-stat-card__value" id="ct-visitors-count">{{ visitorCount }}</span>
+        </div>
+        <div class="ct-stat-card">
+            <span class="ct-stat-card__label">Requests / min</span>
+            <span class="ct-stat-card__value" id="ct-rpm">{{ requestsPerMinute }}</span>
+        </div>
+        <div class="ct-stat-card">
+            <span class="ct-stat-card__label">Humans</span>
+            <span class="ct-stat-card__value">{{ trafficBreakdown.guests + trafficBreakdown.authenticated }}</span>
+        </div>
+        <div class="ct-stat-card">
+            <span class="ct-stat-card__label">Bots</span>
+            <span class="ct-stat-card__value">{{ trafficBreakdown.bots }}</span>
+        </div>
+        <div class="ct-stat-card">
+            <span class="ct-stat-card__label">Authenticated</span>
+            <span class="ct-stat-card__value">{{ trafficBreakdown.authenticated }}</span>
+        </div>
+    </div>
+
+    <div class="ct-toolbar">
+        <button class="ct-period-btn active" data-period="15m">15m</button>
+        <button class="ct-period-btn" data-period="1h">1h</button>
+        <button class="ct-period-btn" data-period="24h">24h</button>
+        <button class="ct-period-btn" data-period="7d">7d</button>
+    </div>
+
+    <div class="ct-grid ct-grid--2">
+        <div class="ct-panel">
+            <div class="ct-panel__header">
+                <h3 class="ct-panel__title">Top URLs</h3>
+            </div>
+            <div class="ct-panel__body ct-panel__body--flush">
+                <table class="ct-table">
+                    <thead>
+                        <tr><th>URL</th><th>Hits</th></tr>
+                    </thead>
+                    <tbody>
+                        {% for row in topUrls %}
+                            <tr>
+                                <td>{{ row.url }}</td>
+                                <td>{{ row.hits }}</td>
+                            </tr>
+                        {% else %}
+                            <tr><td colspan="2" class="ct-empty">No traffic data yet</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="ct-panel">
+            <div class="ct-panel__header">
+                <h3 class="ct-panel__title">Active Visitors</h3>
+            </div>
+            <div class="ct-panel__body ct-panel__body--flush">
+                <table class="ct-table">
+                    <thead>
+                        <tr><th>URL</th><th>Method</th><th>Type</th><th>Last Seen</th></tr>
+                    </thead>
+                    <tbody>
+                        {% for v in visitors[:30] %}
+                            <tr>
+                                <td>{{ v.url }}</td>
+                                <td>{{ v.method }}</td>
+                                <td>
+                                    {% if v.isBot %}
+                                        <span class="ct-badge ct-badge--warning"><span class="ct-badge__dot"></span> Bot</span>
+                                    {% elseif v.isGuest %}
+                                        Guest
+                                    {% else %}
+                                        Auth
+                                    {% endif %}
+                                </td>
+                                <td>{{ v.lastSeenAt }}</td>
+                            </tr>
+                        {% else %}
+                            <tr><td colspan="4" class="ct-empty">No active visitors</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+{% endblock %}

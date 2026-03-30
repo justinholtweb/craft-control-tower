@@ -1,0 +1,194 @@
+{% extends 'control-tower/_cp/_layout' %}
+
+{% block dashboard %}
+    {# Content summary stats #}
+    <div class="ct-grid ct-grid--stats" style="margin-bottom: 20px;">
+        <div class="ct-stat-card">
+            <span class="ct-stat-card__label">Total Entries</span>
+            <span class="ct-stat-card__value">{{ contentSummary.entries }}</span>
+        </div>
+        <div class="ct-stat-card">
+            <span class="ct-stat-card__label">Assets</span>
+            <span class="ct-stat-card__value">{{ contentSummary.assets }}</span>
+        </div>
+        <div class="ct-stat-card">
+            <span class="ct-stat-card__label">Categories</span>
+            <span class="ct-stat-card__value">{{ contentSummary.categories }}</span>
+        </div>
+        <div class="ct-stat-card">
+            <span class="ct-stat-card__label">Pending Drafts</span>
+            <span class="ct-stat-card__value">{{ pendingDrafts }}</span>
+        </div>
+    </div>
+
+    {# Content pipeline today #}
+    <div class="ct-grid ct-grid--2" style="margin-bottom: 20px;">
+        <div class="ct-panel">
+            <div class="ct-panel__header">
+                <h3 class="ct-panel__title">Today's Pipeline</h3>
+            </div>
+            <div class="ct-panel__body">
+                <div class="ct-info-grid">
+                    <dt>Drafts Created</dt>
+                    <dd>{{ contentPipeline.draftsCreatedToday }}</dd>
+                    <dt>Published</dt>
+                    <dd>{{ contentPipeline.publishedToday }}</dd>
+                    <dt>Assets Uploaded</dt>
+                    <dd>{{ contentPipeline.assetsUploadedToday }}</dd>
+                    <dt>Deleted</dt>
+                    <dd>{{ contentPipeline.deletedToday }}</dd>
+                    <dt>Scheduled Upcoming</dt>
+                    <dd>{{ contentPipeline.scheduledUpcoming }}</dd>
+                </div>
+            </div>
+        </div>
+
+        <div class="ct-panel">
+            <div class="ct-panel__header">
+                <h3 class="ct-panel__title">Entries by Section</h3>
+            </div>
+            <div class="ct-panel__body ct-panel__body--flush">
+                <table class="ct-table">
+                    <thead>
+                        <tr><th>Section</th><th>Type</th><th>Count</th></tr>
+                    </thead>
+                    <tbody>
+                        {% for section in entriesBySection %}
+                            <tr>
+                                <td>{{ section.name }}</td>
+                                <td>{{ section.type }}</td>
+                                <td>{{ section.count }}</td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div class="ct-grid ct-grid--3" style="margin-bottom: 20px;">
+        {# Stale entries #}
+        <div class="ct-panel">
+            <div class="ct-panel__header">
+                <h3 class="ct-panel__title">Stale Content</h3>
+            </div>
+            <div class="ct-panel__body ct-panel__body--flush">
+                <table class="ct-table">
+                    <thead>
+                        <tr><th>Title</th><th>Section</th><th>Days Stale</th></tr>
+                    </thead>
+                    <tbody>
+                        {% for entry in staleEntries[:15] %}
+                            <tr>
+                                <td><a href="{{ entry.cpEditUrl }}">{{ entry.title }}</a></td>
+                                <td>{{ entry.section }}</td>
+                                <td>{{ entry.daysStale }}d</td>
+                            </tr>
+                        {% else %}
+                            <tr><td colspan="3" class="ct-empty">No stale content</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        {# Scheduled #}
+        <div class="ct-panel">
+            <div class="ct-panel__header">
+                <h3 class="ct-panel__title">Scheduled</h3>
+            </div>
+            <div class="ct-panel__body ct-panel__body--flush">
+                <table class="ct-table">
+                    <thead>
+                        <tr><th>Title</th><th>Post Date</th></tr>
+                    </thead>
+                    <tbody>
+                        {% for entry in scheduledEntries %}
+                            <tr>
+                                <td><a href="{{ entry.cpEditUrl }}">{{ entry.title }}</a></td>
+                                <td>{{ entry.postDate }}</td>
+                            </tr>
+                        {% else %}
+                            <tr><td colspan="2" class="ct-empty">Nothing scheduled</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        {# Expired #}
+        <div class="ct-panel">
+            <div class="ct-panel__header">
+                <h3 class="ct-panel__title">Expired</h3>
+            </div>
+            <div class="ct-panel__body ct-panel__body--flush">
+                <table class="ct-table">
+                    <thead>
+                        <tr><th>Title</th><th>Expired</th></tr>
+                    </thead>
+                    <tbody>
+                        {% for entry in expiredEntries %}
+                            <tr>
+                                <td><a href="{{ entry.cpEditUrl }}">{{ entry.title }}</a></td>
+                                <td>{{ entry.expiryDate }}</td>
+                            </tr>
+                        {% else %}
+                            <tr><td colspan="2" class="ct-empty">No expired content</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    {# Asset volumes #}
+    {% if assetVolumes|length %}
+        <div class="ct-panel" style="margin-bottom: 20px;">
+            <div class="ct-panel__header">
+                <h3 class="ct-panel__title">Asset Volumes</h3>
+            </div>
+            <div class="ct-panel__body ct-panel__body--flush">
+                <table class="ct-table">
+                    <thead>
+                        <tr><th>Volume</th><th>Assets</th></tr>
+                    </thead>
+                    <tbody>
+                        {% for vol in assetVolumes %}
+                            <tr>
+                                <td>{{ vol.name }}</td>
+                                <td>{{ vol.count }}</td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    {% endif %}
+
+    {# Recent events #}
+    <div class="ct-panel">
+        <div class="ct-panel__header">
+            <h3 class="ct-panel__title">Recent Content Events (24h)</h3>
+        </div>
+        <div class="ct-panel__body ct-panel__body--flush">
+            <table class="ct-table">
+                <thead>
+                    <tr><th>Type</th><th>Element</th><th>Action</th><th>Section</th><th>Time</th></tr>
+                </thead>
+                <tbody>
+                    {% for event in recentEvents %}
+                        <tr>
+                            <td>{{ event.elementType }}</td>
+                            <td>#{{ event.elementId }}</td>
+                            <td>{{ event.action }}</td>
+                            <td>{{ event.sectionHandle ?? '—' }}</td>
+                            <td>{{ event.recordedAt }}</td>
+                        </tr>
+                    {% else %}
+                        <tr><td colspan="5" class="ct-empty">No recent events</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+{% endblock %}

@@ -1,0 +1,114 @@
+{% extends 'control-tower/_cp/_layout' %}
+
+{% block dashboard %}
+    <div class="ct-grid ct-grid--stats" style="margin-bottom: 20px;">
+        <div class="ct-stat-card">
+            <span class="ct-stat-card__label">Total Jobs</span>
+            <span class="ct-stat-card__value">{{ queueSummary.total }}</span>
+        </div>
+        <div class="ct-stat-card">
+            <span class="ct-stat-card__label">Waiting</span>
+            <span class="ct-stat-card__value" id="ct-queue-waiting">{{ queueSummary.waiting }}</span>
+        </div>
+        <div class="ct-stat-card">
+            <span class="ct-stat-card__label">Running</span>
+            <span class="ct-stat-card__value">{{ queueSummary.reserved }}</span>
+        </div>
+        <div class="ct-stat-card">
+            <span class="ct-stat-card__label">Failed</span>
+            <span class="ct-stat-card__value" id="ct-queue-failed">{{ queueSummary.failed }}</span>
+        </div>
+        <div class="ct-stat-card">
+            <span class="ct-stat-card__label">Queue Health</span>
+            <span id="ct-queue-health" class="ct-badge ct-badge--{{ queueHealth }}">
+                <span class="ct-badge__dot"></span>
+                <span class="ct-badge__label">{{ queueHealth|capitalize }}</span>
+            </span>
+        </div>
+    </div>
+
+    <div class="ct-grid ct-grid--2">
+        {% if failedJobs|length %}
+            <div class="ct-panel">
+                <div class="ct-panel__header">
+                    <h3 class="ct-panel__title">Failed Jobs</h3>
+                </div>
+                <div class="ct-panel__body ct-panel__body--flush">
+                    <table class="ct-table">
+                        <thead>
+                            <tr><th>Description</th><th>Error</th><th>Attempts</th><th>Failed At</th></tr>
+                        </thead>
+                        <tbody>
+                            {% for job in failedJobs %}
+                                <tr>
+                                    <td>{{ job.description }}</td>
+                                    <td title="{{ job.error }}">{{ job.error[:80] }}{{ job.error|length > 80 ? '…' }}</td>
+                                    <td>{{ job.attempt }}</td>
+                                    <td>{{ job.dateFailed }}</td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        {% endif %}
+
+        {% if commonFailures|length %}
+            <div class="ct-panel">
+                <div class="ct-panel__header">
+                    <h3 class="ct-panel__title">Most Common Failures</h3>
+                </div>
+                <div class="ct-panel__body ct-panel__body--flush">
+                    <table class="ct-table">
+                        <thead>
+                            <tr><th>Job Type</th><th>Count</th><th>Last Error</th></tr>
+                        </thead>
+                        <tbody>
+                            {% for failure in commonFailures %}
+                                <tr>
+                                    <td>{{ failure.description }}</td>
+                                    <td>{{ failure.failCount }}</td>
+                                    <td title="{{ failure.lastError }}">{{ failure.lastError[:60] }}{{ failure.lastError|length > 60 ? '…' }}</td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        {% endif %}
+    </div>
+
+    <div class="ct-panel" style="margin-top: 20px;">
+        <div class="ct-panel__header">
+            <h3 class="ct-panel__title">Recent Jobs</h3>
+        </div>
+        <div class="ct-panel__body ct-panel__body--flush">
+            <table class="ct-table">
+                <thead>
+                    <tr><th>Description</th><th>Status</th><th>Progress</th><th>Attempts</th><th>Pushed</th></tr>
+                </thead>
+                <tbody>
+                    {% for job in recentJobs %}
+                        <tr>
+                            <td>{{ job.description }}</td>
+                            <td>
+                                {% if job.fail %}
+                                    <span class="ct-badge ct-badge--critical"><span class="ct-badge__dot"></span> Failed</span>
+                                {% elseif job.dateReserved %}
+                                    <span class="ct-badge ct-badge--warning"><span class="ct-badge__dot"></span> Running</span>
+                                {% else %}
+                                    <span class="ct-badge ct-badge--healthy"><span class="ct-badge__dot"></span> Waiting</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ job.progress ?? 0 }}%{{ job.progressLabel ? ' — ' ~ job.progressLabel }}</td>
+                            <td>{{ job.attempt }}</td>
+                            <td>{{ job.timePushed }}</td>
+                        </tr>
+                    {% else %}
+                        <tr><td colspan="5" class="ct-empty">No jobs in queue</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+{% endblock %}

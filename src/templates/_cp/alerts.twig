@@ -1,0 +1,70 @@
+{% extends 'control-tower/_cp/_layout' %}
+
+{% block dashboard %}
+    <div class="ct-grid ct-grid--stats" style="margin-bottom: 20px;">
+        <div class="ct-stat-card">
+            <span class="ct-stat-card__label">Active Alerts</span>
+            <span class="ct-stat-card__value" id="ct-alert-count">{{ activeAlerts|length }}</span>
+        </div>
+    </div>
+
+    <div class="ct-grid ct-grid--2">
+        {# Active alerts #}
+        <div class="ct-panel">
+            <div class="ct-panel__header">
+                <h3 class="ct-panel__title">Active Alerts</h3>
+            </div>
+            <div class="ct-panel__body ct-panel__body--flush" id="ct-alerts-list">
+                {% if activeAlerts|length %}
+                    {% for alert in activeAlerts %}
+                        <div class="ct-alert-item">
+                            <span class="ct-alert-icon ct-alert-icon--{{ alert.severity }}">!</span>
+                            <div>
+                                <div class="ct-alert-message">{{ alert.message }}</div>
+                                <div class="ct-alert-time">
+                                    <span class="ct-badge ct-badge--{{ alert.severity }}">{{ alert.severity }}</span>
+                                    &middot; {{ alert.type }} &middot; {{ alert.createdAt }}
+                                </div>
+                            </div>
+                        </div>
+                    {% endfor %}
+                {% else %}
+                    <div class="ct-empty">No active alerts — all clear</div>
+                {% endif %}
+            </div>
+        </div>
+
+        {# Alert history #}
+        <div class="ct-panel">
+            <div class="ct-panel__header">
+                <h3 class="ct-panel__title">Alert History</h3>
+            </div>
+            <div class="ct-panel__body ct-panel__body--flush">
+                <table class="ct-table">
+                    <thead>
+                        <tr><th>Type</th><th>Severity</th><th>Message</th><th>Status</th><th>Created</th><th>Resolved</th></tr>
+                    </thead>
+                    <tbody>
+                        {% for alert in alertHistory %}
+                            <tr>
+                                <td>{{ alert.type }}</td>
+                                <td>
+                                    <span class="ct-badge ct-badge--{{ alert.severity }}">
+                                        <span class="ct-badge__dot"></span>
+                                        {{ alert.severity }}
+                                    </span>
+                                </td>
+                                <td>{{ alert.message }}</td>
+                                <td>{{ alert.isActive ? 'Active' : 'Resolved' }}</td>
+                                <td>{{ alert.createdAt }}</td>
+                                <td>{{ alert.resolvedAt ?? '—' }}</td>
+                            </tr>
+                        {% else %}
+                            <tr><td colspan="6" class="ct-empty">No alert history</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+{% endblock %}

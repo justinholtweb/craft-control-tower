@@ -1,0 +1,472 @@
+/* ==========================================================================
+   Control Tower — CP & Widget Styles
+   ========================================================================== */
+
+:root {
+    --ct-green: #22c55e;
+    --ct-yellow: #eab308;
+    --ct-red: #ef4444;
+    --ct-blue: #3b82f6;
+    --ct-gray: #6b7280;
+    --ct-border: rgba(0, 0, 0, 0.1);
+    --ct-card-bg: #fff;
+    --ct-card-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+    --ct-radius: 8px;
+}
+
+/* Layout */
+.ct-grid {
+    display: grid;
+    gap: 16px;
+}
+
+.ct-grid--stats {
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+}
+
+.ct-grid--2 {
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+}
+
+.ct-grid--3 {
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+}
+
+/* Stat Cards */
+.ct-stat-card {
+    background: var(--ct-card-bg);
+    border: 1px solid var(--ct-border);
+    border-radius: var(--ct-radius);
+    padding: 16px 20px;
+    box-shadow: var(--ct-card-shadow);
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.ct-stat-card__label {
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--ct-gray);
+}
+
+.ct-stat-card__value {
+    font-size: 28px;
+    font-weight: 700;
+    line-height: 1.2;
+    color: #111827;
+}
+
+.ct-stat-card__meta {
+    font-size: 12px;
+    color: var(--ct-gray);
+}
+
+/* Health Badges */
+.ct-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 3px 10px;
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: 600;
+    line-height: 1;
+}
+
+.ct-badge--healthy {
+    background: #dcfce7;
+    color: #166534;
+}
+
+.ct-badge--warning {
+    background: #fef9c3;
+    color: #854d0e;
+}
+
+.ct-badge--critical {
+    background: #fee2e2;
+    color: #991b1b;
+}
+
+.ct-badge__dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    display: inline-block;
+}
+
+.ct-badge--healthy .ct-badge__dot {
+    background: var(--ct-green);
+}
+
+.ct-badge--warning .ct-badge__dot {
+    background: var(--ct-yellow);
+}
+
+.ct-badge--critical .ct-badge__dot {
+    background: var(--ct-red);
+}
+
+/* Panels */
+.ct-panel {
+    background: var(--ct-card-bg);
+    border: 1px solid var(--ct-border);
+    border-radius: var(--ct-radius);
+    box-shadow: var(--ct-card-shadow);
+    overflow: hidden;
+}
+
+.ct-panel__header {
+    padding: 14px 20px;
+    border-bottom: 1px solid var(--ct-border);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.ct-panel__title {
+    font-size: 14px;
+    font-weight: 600;
+    color: #111827;
+    margin: 0;
+}
+
+.ct-panel__body {
+    padding: 16px 20px;
+}
+
+.ct-panel__body--flush {
+    padding: 0;
+}
+
+/* Tables */
+.ct-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+}
+
+.ct-table th {
+    text-align: left;
+    padding: 10px 16px;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--ct-gray);
+    background: #f9fafb;
+    border-bottom: 1px solid var(--ct-border);
+}
+
+.ct-table td {
+    padding: 10px 16px;
+    border-bottom: 1px solid var(--ct-border);
+    color: #374151;
+}
+
+.ct-table tbody tr:last-child td {
+    border-bottom: none;
+}
+
+.ct-table tbody tr:hover {
+    background: #f9fafb;
+}
+
+/* Editor avatars */
+.ct-avatar {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid #e5e7eb;
+}
+
+.ct-avatar--placeholder {
+    background: var(--ct-blue);
+    color: white;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+/* Editor row */
+.ct-editor-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.ct-editor-info {
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+}
+
+.ct-editor-name {
+    font-weight: 600;
+    font-size: 13px;
+    color: #111827;
+}
+
+.ct-editor-action {
+    font-size: 11px;
+    color: var(--ct-gray);
+}
+
+/* Alerts list */
+.ct-alert-item {
+    padding: 12px 20px;
+    border-bottom: 1px solid var(--ct-border);
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+}
+
+.ct-alert-item:last-child {
+    border-bottom: none;
+}
+
+.ct-alert-icon {
+    flex-shrink: 0;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    font-weight: 700;
+    margin-top: 1px;
+}
+
+.ct-alert-icon--warning {
+    background: #fef9c3;
+    color: #854d0e;
+}
+
+.ct-alert-icon--critical {
+    background: #fee2e2;
+    color: #991b1b;
+}
+
+.ct-alert-icon--info {
+    background: #dbeafe;
+    color: #1e40af;
+}
+
+.ct-alert-message {
+    font-size: 13px;
+    color: #374151;
+    line-height: 1.5;
+}
+
+.ct-alert-time {
+    font-size: 11px;
+    color: var(--ct-gray);
+    margin-top: 2px;
+}
+
+/* Metric bars */
+.ct-metric-bar {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 12px;
+}
+
+.ct-metric-bar:last-child {
+    margin-bottom: 0;
+}
+
+.ct-metric-bar__label {
+    width: 100px;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--ct-gray);
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    flex-shrink: 0;
+}
+
+.ct-metric-bar__track {
+    flex: 1;
+    height: 8px;
+    background: #f3f4f6;
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.ct-metric-bar__fill {
+    height: 100%;
+    border-radius: 4px;
+    transition: width 0.5s ease;
+}
+
+.ct-metric-bar__fill--green {
+    background: var(--ct-green);
+}
+
+.ct-metric-bar__fill--yellow {
+    background: var(--ct-yellow);
+}
+
+.ct-metric-bar__fill--red {
+    background: var(--ct-red);
+}
+
+.ct-metric-bar__value {
+    width: 50px;
+    text-align: right;
+    font-size: 13px;
+    font-weight: 600;
+    color: #111827;
+    flex-shrink: 0;
+}
+
+/* Toolbar / period selector */
+.ct-toolbar {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 16px;
+}
+
+.ct-period-btn {
+    padding: 4px 12px;
+    border: 1px solid var(--ct-border);
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 500;
+    background: white;
+    color: var(--ct-gray);
+    cursor: pointer;
+    transition: all 0.15s;
+}
+
+.ct-period-btn:hover {
+    border-color: var(--ct-blue);
+    color: var(--ct-blue);
+}
+
+.ct-period-btn.active {
+    background: var(--ct-blue);
+    color: white;
+    border-color: var(--ct-blue);
+}
+
+/* Widget-specific compact styles */
+.ct-widget .ct-stat-card {
+    padding: 12px 14px;
+}
+
+.ct-widget .ct-stat-card__value {
+    font-size: 22px;
+}
+
+.ct-widget .ct-panel__body {
+    padding: 10px 14px;
+}
+
+.ct-widget .ct-table td,
+.ct-widget .ct-table th {
+    padding: 6px 10px;
+}
+
+/* Empty states */
+.ct-empty {
+    padding: 24px;
+    text-align: center;
+    color: var(--ct-gray);
+    font-size: 13px;
+}
+
+/* Link to full page */
+.ct-link-full {
+    font-size: 12px;
+    color: var(--ct-blue);
+    text-decoration: none;
+    font-weight: 500;
+}
+
+.ct-link-full:hover {
+    text-decoration: underline;
+}
+
+/* Collision warning */
+.ct-collision-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 2px 8px;
+    border-radius: 10px;
+    font-size: 11px;
+    font-weight: 600;
+    background: #fee2e2;
+    color: #991b1b;
+}
+
+/* Section tabs (for CP pages) — uses Craft's native tab styling */
+.ct-section-header {
+    margin-bottom: 24px;
+}
+
+/* Refreshing indicator */
+.ct-refreshing {
+    display: none;
+    align-items: center;
+    gap: 6px;
+    font-size: 11px;
+    color: var(--ct-gray);
+}
+
+.ct-refreshing.active {
+    display: inline-flex;
+}
+
+.ct-refreshing__spinner {
+    width: 12px;
+    height: 12px;
+    border: 2px solid #e5e7eb;
+    border-top-color: var(--ct-blue);
+    border-radius: 50%;
+    animation: ct-spin 0.6s linear infinite;
+}
+
+@keyframes ct-spin {
+    to { transform: rotate(360deg); }
+}
+
+/* Key-value info grid */
+.ct-info-grid {
+    display: grid;
+    grid-template-columns: 140px 1fr;
+    gap: 8px 16px;
+    font-size: 13px;
+}
+
+.ct-info-grid dt {
+    font-weight: 600;
+    color: var(--ct-gray);
+}
+
+.ct-info-grid dd {
+    color: #111827;
+    margin: 0;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .ct-grid--stats {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .ct-grid--2,
+    .ct-grid--3 {
+        grid-template-columns: 1fr;
+    }
+}

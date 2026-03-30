@@ -1,0 +1,27 @@
+{% extends '_layouts/cp' %}
+
+{% set title = title ?? 'Control Tower' %}
+{% set selectedSubnavItem = selectedTab ?? 'overview' %}
+
+{% set tabs = {
+    overview: { label: 'Overview', url: cpUrl('control-tower') },
+    visitors: { label: 'Live Traffic', url: cpUrl('control-tower/visitors') },
+    editors: { label: 'Editors', url: cpUrl('control-tower/editors') },
+    content: { label: 'Content Health', url: cpUrl('control-tower/content') },
+    queue: { label: 'Queue Watch', url: cpUrl('control-tower/queue') },
+    system: { label: 'System Pulse', url: cpUrl('control-tower/system') },
+    alerts: { label: 'Alerts', url: cpUrl('control-tower/alerts') },
+} %}
+
+{% block content %}
+    <div id="ct-dashboard"
+         data-refresh-interval="{{ settings.refreshInterval ?? 30 }}"
+         data-tab="{{ selectedTab ?? 'overview' }}">
+        <div class="ct-refreshing">
+            <span class="ct-refreshing__spinner"></span>
+            <span>Refreshing&hellip;</span>
+        </div>
+
+        {% block dashboard %}{% endblock %}
+    </div>
+{% endblock %}

@@ -1,0 +1,127 @@
+<div class="ct-widget" data-refresh-interval="{{ widget.refreshInterval }}">
+    {# Top row — stat cards #}
+    <div class="ct-grid ct-grid--stats" style="margin-bottom: 12px;">
+        {% if widget.showVisitors %}
+            <div class="ct-stat-card">
+                <span class="ct-stat-card__label">Visitors</span>
+                <span class="ct-stat-card__value" id="ct-w-visitors">{{ visitorCount }}</span>
+                <span class="ct-stat-card__meta">
+                    {{ trafficBreakdown.guests }}g / {{ trafficBreakdown.bots }}b
+                </span>
+            </div>
+        {% endif %}
+
+        {% if widget.showEditors %}
+            <div class="ct-stat-card">
+                <span class="ct-stat-card__label">Editors</span>
+                <span class="ct-stat-card__value" id="ct-w-editors">{{ editorCount }}</span>
+            </div>
+        {% endif %}
+
+        {% if widget.showQueue %}
+            <div class="ct-stat-card">
+                <span class="ct-stat-card__label">Queue</span>
+                <span class="ct-stat-card__value" id="ct-w-queue-waiting">{{ queueSummary.waiting }}</span>
+                <span class="ct-stat-card__meta">
+                    <span id="ct-w-queue-failed">{{ queueSummary.failed }}</span> failed
+                </span>
+            </div>
+        {% endif %}
+
+        {% if widget.showServer %}
+            <div class="ct-stat-card">
+                <span class="ct-stat-card__label">Server</span>
+                <span id="ct-w-server-health" class="ct-badge ct-badge--{{ serverHealth }}">
+                    <span class="ct-badge__dot"></span>
+                    <span class="ct-badge__label">{{ serverHealth|capitalize }}</span>
+                </span>
+            </div>
+        {% endif %}
+
+        {% if widget.showAlerts %}
+            <div class="ct-stat-card">
+                <span class="ct-stat-card__label">Alerts</span>
+                <span class="ct-stat-card__value" id="ct-w-alerts">{{ alertCount }}</span>
+            </div>
+        {% endif %}
+    </div>
+
+    {# Editors mini-list #}
+    {% if widget.showEditors and editors|length %}
+        <div class="ct-panel" style="margin-bottom: 12px;">
+            <div class="ct-panel__header">
+                <h3 class="ct-panel__title">Active Editors</h3>
+            </div>
+            <div class="ct-panel__body ct-panel__body--flush">
+                <table class="ct-table">
+                    <thead>
+                        <tr><th>Editor</th><th>Section</th><th>Element</th></tr>
+                    </thead>
+                    <tbody>
+                        {% for editor in editors[:5] %}
+                            <tr>
+                                <td>
+                                    <div class="ct-editor-row">
+                                        {% if editor.photoUrl %}
+                                            <img class="ct-avatar" src="{{ editor.photoUrl }}" alt="">
+                                        {% else %}
+                                            <span class="ct-avatar ct-avatar--placeholder">{{ editor.userName[0:1]|upper }}</span>
+                                        {% endif %}
+                                        <span class="ct-editor-name">{{ editor.userName }}</span>
+                                    </div>
+                                </td>
+                                <td>{{ editor.sectionHandle ?? '—' }}</td>
+                                <td>{{ editor.elementId ? '#' ~ editor.elementId : '—' }}</td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    {% endif %}
+
+    {# Top URLs mini-list #}
+    {% if widget.showTopUrls and topUrls|length %}
+        <div class="ct-panel" style="margin-bottom: 12px;">
+            <div class="ct-panel__header">
+                <h3 class="ct-panel__title">Top URLs</h3>
+            </div>
+            <div class="ct-panel__body ct-panel__body--flush">
+                <table class="ct-table">
+                    <tbody>
+                        {% for row in topUrls %}
+                            <tr>
+                                <td>{{ row.url }}</td>
+                                <td>{{ row.hits }}</td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    {% endif %}
+
+    {# Alerts mini-list #}
+    {% if widget.showAlerts and activeAlerts|length %}
+        <div class="ct-panel">
+            <div class="ct-panel__header">
+                <h3 class="ct-panel__title">Alerts</h3>
+            </div>
+            <div class="ct-panel__body ct-panel__body--flush">
+                {% for alert in activeAlerts[:3] %}
+                    <div class="ct-alert-item">
+                        <span class="ct-alert-icon ct-alert-icon--{{ alert.severity }}">!</span>
+                        <div>
+                            <div class="ct-alert-message">{{ alert.message }}</div>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+    {% endif %}
+
+    {# Link to full CP section #}
+    <p style="margin-top: 12px; text-align: center;">
+        <a href="{{ cpUrl('control-tower') }}" class="ct-link-full">Open Control Tower</a>
+    </p>
+</div>

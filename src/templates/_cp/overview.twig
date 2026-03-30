@@ -1,0 +1,170 @@
+{% extends 'control-tower/_cp/_layout' %}
+
+{% block dashboard %}
+    {# Top row — Key stats #}
+    <div class="ct-grid ct-grid--stats" style="margin-bottom: 20px;">
+        <div class="ct-stat-card">
+            <span class="ct-stat-card__label">Active Visitors</span>
+            <span class="ct-stat-card__value" id="ct-visitors-count">{{ visitorCount }}</span>
+            <span class="ct-stat-card__meta">
+                {{ trafficBreakdown.guests }} guests, {{ trafficBreakdown.bots }} bots
+            </span>
+        </div>
+
+        <div class="ct-stat-card">
+            <span class="ct-stat-card__label">Active Editors</span>
+            <span class="ct-stat-card__value" id="ct-editors-count">{{ editorCount }}</span>
+            <span class="ct-stat-card__meta">in Control Panel</span>
+        </div>
+
+        <div class="ct-stat-card">
+            <span class="ct-stat-card__label">Queue</span>
+            <span class="ct-stat-card__value" id="ct-queue-waiting">{{ queueSummary.waiting }}</span>
+            <span class="ct-stat-card__meta">
+                waiting &middot; <span id="ct-queue-failed">{{ queueSummary.failed }}</span> failed
+            </span>
+        </div>
+
+        <div class="ct-stat-card">
+            <span class="ct-stat-card__label">Server Health</span>
+            <span id="ct-server-health" class="ct-badge ct-badge--{{ serverHealth }}">
+                <span class="ct-badge__dot"></span>
+                <span class="ct-badge__label">{{ serverHealth|capitalize }}</span>
+            </span>
+        </div>
+
+        <div class="ct-stat-card">
+            <span class="ct-stat-card__label">Active Alerts</span>
+            <span class="ct-stat-card__value" id="ct-alert-count">{{ alertCount }}</span>
+        </div>
+    </div>
+
+    {# Middle row — Panels #}
+    <div class="ct-grid ct-grid--2" style="margin-bottom: 20px;">
+        {# Active Editors Panel #}
+        <div class="ct-panel">
+            <div class="ct-panel__header">
+                <h3 class="ct-panel__title">Active Editors</h3>
+                <a href="{{ cpUrl('control-tower/editors') }}" class="ct-link-full">View all</a>
+            </div>
+            <div class="ct-panel__body ct-panel__body--flush">
+                <table class="ct-table">
+                    <thead>
+                        <tr>
+                            <th>Editor</th>
+                            <th>Section</th>
+                            <th>Element</th>
+                            <th>Last Seen</th>
+                        </tr>
+                    </thead>
+                    <tbody id="ct-editors-tbody">
+                        {% if editors|length %}
+                            {% for editor in editors %}
+                                <tr>
+                                    <td>
+                                        <div class="ct-editor-row">
+                                            {% if editor.photoUrl %}
+                                                <img class="ct-avatar" src="{{ editor.photoUrl }}" alt="">
+                                            {% else %}
+                                                <span class="ct-avatar ct-avatar--placeholder">{{ editor.userName[0:1]|upper }}</span>
+                                            {% endif %}
+                                            <div class="ct-editor-info">
+                                                <span class="ct-editor-name">{{ editor.userName }}</span>
+                                                <span class="ct-editor-action">{{ editor.action }}</span>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>{{ editor.sectionHandle ?? '—' }}</td>
+                                    <td>{{ editor.elementId ? '#' ~ editor.elementId : '—' }}</td>
+                                    <td>{{ editor.lastSeenAt }}</td>
+                                </tr>
+                            {% endfor %}
+                        {% else %}
+                            <tr><td colspan="4" class="ct-empty">No active editors</td></tr>
+                        {% endif %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        {# Alerts Panel #}
+        <div class="ct-panel">
+            <div class="ct-panel__header">
+                <h3 class="ct-panel__title">Active Alerts</h3>
+                <a href="{{ cpUrl('control-tower/alerts') }}" class="ct-link-full">View all</a>
+            </div>
+            <div class="ct-panel__body ct-panel__body--flush" id="ct-alerts-list">
+                {% if activeAlerts|length %}
+                    {% for alert in activeAlerts %}
+                        <div class="ct-alert-item">
+                            <span class="ct-alert-icon ct-alert-icon--{{ alert.severity }}">!</span>
+                            <div>
+                                <div class="ct-alert-message">{{ alert.message }}</div>
+                                <div class="ct-alert-time">{{ alert.createdAt }}</div>
+                            </div>
+                        </div>
+                    {% endfor %}
+                {% else %}
+                    <div class="ct-empty">No active alerts</div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    {# Bottom row — Content pipeline & Top URLs #}
+    <div class="ct-grid ct-grid--2">
+        <div class="ct-panel">
+            <div class="ct-panel__header">
+                <h3 class="ct-panel__title">Content Pipeline — Today</h3>
+                <a href="{{ cpUrl('control-tower/content') }}" class="ct-link-full">View details</a>
+            </div>
+            <div class="ct-panel__body">
+                <div class="ct-info-grid">
+                    <dt>Drafts Created</dt>
+                    <dd>{{ contentPipeline.draftsCreatedToday }}</dd>
+                    <dt>Published</dt>
+                    <dd>{{ contentPipeline.publishedToday }}</dd>
+                    <dt>Assets Uploaded</dt>
+                    <dd>{{ contentPipeline.assetsUploadedToday }}</dd>
+                    <dt>Deleted</dt>
+                    <dd>{{ contentPipeline.deletedToday }}</dd>
+                    <dt>Scheduled Upcoming</dt>
+                    <dd>{{ contentPipeline.scheduledUpcoming }}</dd>
+                </div>
+            </div>
+        </div>
+
+        <div class="ct-panel">
+            <div class="ct-panel__header">
+                <h3 class="ct-panel__title">Top URLs — Last 5 Minutes</h3>
+                <a href="{{ cpUrl('control-tower/visitors') }}" class="ct-link-full">View traffic</a>
+            </div>
+            <div class="ct-panel__body ct-panel__body--flush">
+                <table class="ct-table">
+                    <thead>
+                        <tr>
+                            <th>URL</th>
+                            <th>Hits</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% if topUrls|length %}
+                            {% for row in topUrls %}
+                                <tr>
+                                    <td>{{ row.url }}</td>
+                                    <td>{{ row.hits }}</td>
+                                </tr>
+                            {% endfor %}
+                        {% else %}
+                            <tr><td colspan="2" class="ct-empty">No traffic data yet</td></tr>
+                        {% endif %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <p style="margin-top: 16px; text-align: center;">
+        <span class="ct-stat-card__meta">Total content: {{ contentSummary.entries }} entries &middot; {{ contentSummary.assets }} assets &middot; {{ contentSummary.categories }} categories &middot; {{ contentSummary.users }} users</span>
+    </p>
+{% endblock %}

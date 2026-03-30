@@ -1,0 +1,60 @@
+{% import '_includes/forms.twig' as forms %}
+
+{{ forms.lightswitchField({
+    label: 'Show Visitors',
+    id: 'showVisitors',
+    name: 'showVisitors',
+    on: widget.showVisitors,
+}) }}
+
+{{ forms.lightswitchField({
+    label: 'Show Editors',
+    id: 'showEditors',
+    name: 'showEditors',
+    on: widget.showEditors,
+}) }}
+
+{{ forms.lightswitchField({
+    label: 'Show Queue',
+    id: 'showQueue',
+    name: 'showQueue',
+    on: widget.showQueue,
+}) }}
+
+{{ forms.lightswitchField({
+    label: 'Show Server Health',
+    id: 'showServer',
+    name: 'showServer',
+    on: widget.showServer,
+}) }}
+
+{{ forms.lightswitchField({
+    label: 'Show Alerts',
+    id: 'showAlerts',
+    name: 'showAlerts',
+    on: widget.showAlerts,
+}) }}
+
+{{ forms.lightswitchField({
+    label: 'Show Content Pipeline',
+    id: 'showContent',
+    name: 'showContent',
+    on: widget.showContent,
+}) }}
+
+{{ forms.lightswitchField({
+    label: 'Show Top URLs',
+    id: 'showTopUrls',
+    name: 'showTopUrls',
+    on: widget.showTopUrls,
+}) }}
+
+{{ forms.textField({
+    label: 'Refresh Interval (seconds)',
+    id: 'refreshInterval',
+    name: 'refreshInterval',
+    value: widget.refreshInterval,
+    type: 'number',
+    min: 5,
+    size: 5,
+}) }}

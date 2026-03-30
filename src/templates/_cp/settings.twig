@@ -1,0 +1,192 @@
+{% extends 'control-tower/_cp/_layout' %}
+{% import '_includes/forms.twig' as forms %}
+
+{% block dashboard %}
+    <form method="post" accept-charset="UTF-8">
+        {{ csrfInput() }}
+        {{ actionInput('plugins/save-plugin-settings') }}
+        {{ hiddenInput('pluginHandle', 'control-tower') }}
+
+        <h2>Tracking</h2>
+
+        {{ forms.lightswitchField({
+            label: 'Track Visitors',
+            instructions: 'Enable front-end visitor tracking via request logging.',
+            id: 'trackVisitors',
+            name: 'settings[trackVisitors]',
+            on: settings.trackVisitors,
+        }) }}
+
+        {{ forms.lightswitchField({
+            label: 'Track Editors',
+            instructions: 'Track CP user activity (routes, element editing).',
+            id: 'trackEditors',
+            name: 'settings[trackEditors]',
+            on: settings.trackEditors,
+        }) }}
+
+        {{ forms.lightswitchField({
+            label: 'Track Server Metrics',
+            instructions: 'Periodically sample CPU, memory, disk, and DB metrics.',
+            id: 'trackServerMetrics',
+            name: 'settings[trackServerMetrics]',
+            on: settings.trackServerMetrics,
+        }) }}
+
+        {{ forms.lightswitchField({
+            label: 'Collision Detection',
+            instructions: 'Alert when multiple editors are working on the same content.',
+            id: 'enableCollisionDetection',
+            name: 'settings[enableCollisionDetection]',
+            on: settings.enableCollisionDetection,
+        }) }}
+
+        <hr>
+        <h2>Refresh &amp; Timeouts</h2>
+
+        {{ forms.textField({
+            label: 'Widget Refresh Interval',
+            instructions: 'How often the dashboard auto-refreshes (seconds).',
+            id: 'refreshInterval',
+            name: 'settings[refreshInterval]',
+            value: settings.refreshInterval,
+            type: 'number',
+            min: 5,
+            size: 5,
+        }) }}
+
+        {{ forms.textField({
+            label: 'Visitor Timeout',
+            instructions: 'Minutes before a visitor is considered inactive.',
+            id: 'visitorTimeout',
+            name: 'settings[visitorTimeout]',
+            value: settings.visitorTimeout,
+            type: 'number',
+            min: 1,
+            size: 5,
+        }) }}
+
+        {{ forms.textField({
+            label: 'Editor Timeout',
+            instructions: 'Minutes before an editor session is considered inactive.',
+            id: 'editorTimeout',
+            name: 'settings[editorTimeout]',
+            value: settings.editorTimeout,
+            type: 'number',
+            min: 1,
+            size: 5,
+        }) }}
+
+        <hr>
+        <h2>Data Retention</h2>
+
+        {{ forms.textField({
+            label: 'Visitor Data Retention',
+            instructions: 'Days to keep visitor tracking data.',
+            id: 'visitorRetentionDays',
+            name: 'settings[visitorRetentionDays]',
+            value: settings.visitorRetentionDays,
+            type: 'number',
+            min: 1,
+            size: 5,
+        }) }}
+
+        {{ forms.textField({
+            label: 'Editor Data Retention',
+            instructions: 'Days to keep editor activity data.',
+            id: 'editorRetentionDays',
+            name: 'settings[editorRetentionDays]',
+            value: settings.editorRetentionDays,
+            type: 'number',
+            min: 1,
+            size: 5,
+        }) }}
+
+        {{ forms.textField({
+            label: 'Content Event Retention',
+            instructions: 'Days to keep content event records.',
+            id: 'contentEventRetentionDays',
+            name: 'settings[contentEventRetentionDays]',
+            value: settings.contentEventRetentionDays,
+            type: 'number',
+            min: 1,
+            size: 5,
+        }) }}
+
+        {{ forms.textField({
+            label: 'Metric Sample Retention',
+            instructions: 'Days to keep server metric samples.',
+            id: 'metricRetentionDays',
+            name: 'settings[metricRetentionDays]',
+            value: settings.metricRetentionDays,
+            type: 'number',
+            min: 1,
+            size: 5,
+        }) }}
+
+        {{ forms.textField({
+            label: 'Alert Retention',
+            instructions: 'Days to keep resolved alert records.',
+            id: 'alertRetentionDays',
+            name: 'settings[alertRetentionDays]',
+            value: settings.alertRetentionDays,
+            type: 'number',
+            min: 1,
+            size: 5,
+        }) }}
+
+        <hr>
+        <h2>Content Health</h2>
+
+        {{ forms.textField({
+            label: 'Stale Content Threshold',
+            instructions: 'Days without update before content is flagged as stale.',
+            id: 'staleContentDays',
+            name: 'settings[staleContentDays]',
+            value: settings.staleContentDays,
+            type: 'number',
+            min: 1,
+            size: 5,
+        }) }}
+
+        <hr>
+        <h2>Alert Thresholds</h2>
+
+        {{ forms.textField({
+            label: 'Queue Failure Alert Threshold',
+            instructions: 'Number of failed queue jobs before triggering an alert.',
+            id: 'queueFailureAlertThreshold',
+            name: 'settings[queueFailureAlertThreshold]',
+            value: settings.queueFailureAlertThreshold,
+            type: 'number',
+            min: 1,
+            size: 5,
+        }) }}
+
+        {{ forms.textField({
+            label: '5xx Error Rate Threshold',
+            instructions: 'Errors per minute before triggering an alert.',
+            id: 'errorRateAlertThreshold',
+            name: 'settings[errorRateAlertThreshold]',
+            value: settings.errorRateAlertThreshold,
+            type: 'number',
+            min: 1,
+            size: 5,
+        }) }}
+
+        {{ forms.textField({
+            label: '404 Spike Threshold',
+            instructions: '404s per minute before triggering an alert.',
+            id: 'notFoundAlertThreshold',
+            name: 'settings[notFoundAlertThreshold]',
+            value: settings.notFoundAlertThreshold,
+            type: 'number',
+            min: 1,
+            size: 5,
+        }) }}
+
+        <hr>
+
+        <button type="submit" class="btn submit">Save Settings</button>
+    </form>
+{% endblock %}

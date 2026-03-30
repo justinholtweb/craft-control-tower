@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+  <!-- Tower base -->
+  <rect x="35" y="55" width="30" height="35" rx="2" fill="currentColor" opacity="0.8"/>
+  <!-- Tower top / control room -->
+  <rect x="25" y="35" width="50" height="22" rx="3" fill="currentColor"/>
+  <!-- Windows -->
+  <rect x="30" y="40" width="8" height="10" rx="1" fill="white" opacity="0.5"/>
+  <rect x="42" y="40" width="8" height="10" rx="1" fill="white" opacity="0.5"/>
+  <rect x="54" y="40" width="8" height="10" rx="1" fill="white" opacity="0.5"/>
+  <!-- Antenna -->
+  <line x1="50" y1="35" x2="50" y2="15" stroke="currentColor" stroke-width="3" stroke-linecap="round"/>
+  <!-- Signal waves -->
+  <path d="M40 18 Q50 8 60 18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" opacity="0.6"/>
+  <path d="M35 23 Q50 10 65 23" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" opacity="0.4"/>
+  <!-- Base platform -->
+  <rect x="20" y="88" width="60" height="4" rx="2" fill="currentColor" opacity="0.6"/>
+</svg>
