@@ -32,9 +32,18 @@ use yii\base\Event;
  */
 class Plugin extends BasePlugin
 {
+    public const EDITION_STANDARD = 'standard';
+
     public string $schemaVersion = '1.0.0';
     public bool $hasCpSection = true;
     public bool $hasCpSettings = true;
+
+    public static function editions(): array
+    {
+        return [
+            self::EDITION_STANDARD,
+        ];
+    }
 
     public static function config(): array
     {
