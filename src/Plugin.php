@@ -81,7 +81,6 @@ class Plugin extends BasePlugin
     {
         $nav = parent::getCpNavItem();
         $nav['label'] = 'Control Tower';
-        $nav['icon'] = '@justinholtweb/controltower/icon.svg';
         $nav['subnav'] = [
             'overview' => ['label' => 'Overview', 'url' => 'control-tower'],
             'visitors' => ['label' => 'Live Traffic', 'url' => 'control-tower/visitors'],
@@ -103,7 +102,7 @@ class Plugin extends BasePlugin
 
     protected function settingsHtml(): ?string
     {
-        return Craft::$app->getView()->renderTemplate('control-tower/_cp/settings', [
+        return Craft::$app->getView()->renderTemplate('control-tower/_cp/_settings_fields', [
             'settings' => $this->getSettings(),
         ]);
     }

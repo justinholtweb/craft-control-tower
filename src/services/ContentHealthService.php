@@ -51,7 +51,7 @@ class ContentHealthService extends Component
             $results[] = [
                 'handle' => $section->handle,
                 'name' => $section->name,
-                'type' => $section->type->value,
+                'type' => $section->type,
                 'count' => (int) \craft\elements\Entry::find()
                     ->section($section->handle)
                     ->status(null)
@@ -64,14 +64,13 @@ class ContentHealthService extends Component
         return $results;
     }
 
-    public function getPendingDrafts(): array
+    public function getPendingDrafts(): int
     {
-        return (new \craft\db\Query())
-            ->select(['COUNT(*) as count'])
+        return (int) (new \craft\db\Query())
             ->from(['e' => '{{%elements}}'])
             ->innerJoin(['d' => '{{%drafts}}'], '[[e.draftId]] = [[d.id]]')
             ->where(['e.dateDeleted' => null])
-            ->scalar();
+            ->count();
     }
 
     public function getStaleEntries(?int $days = null): array

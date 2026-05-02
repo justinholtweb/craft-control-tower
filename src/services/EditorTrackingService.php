@@ -97,12 +97,12 @@ class EditorTrackingService extends Component
     public function getDraftCountsByUser(): array
     {
         return (new \craft\db\Query())
-            ->select(['e.creatorId as userId', 'COUNT(*) as draftCount'])
+            ->select(['d.creatorId as userId', 'COUNT(*) as draftCount'])
             ->from(['e' => '{{%elements}}'])
             ->innerJoin(['d' => '{{%drafts}}'], '[[e.draftId]] = [[d.id]]')
             ->where(['e.dateDeleted' => null])
-            ->andWhere(['not', ['e.creatorId' => null]])
-            ->groupBy(['e.creatorId'])
+            ->andWhere(['not', ['d.creatorId' => null]])
+            ->groupBy(['d.creatorId'])
             ->all();
     }
 

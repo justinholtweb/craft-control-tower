@@ -2,6 +2,7 @@
     "name": "justinholtweb/craft-controltower",
     "description": "Live operational monitoring dashboard for Craft CMS — site activity, editor tracking, content health, queue watch, and system metrics at a glance.",
     "type": "craft-plugin",
+    "version": "5.0.0",
     "license": "proprietary",
     "minimum-stability": "dev",
     "prefer-stable": true,
