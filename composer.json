@@ -20,7 +20,7 @@
         "name": "Control Tower",
         "developer": "Justin Holt",
         "developerUrl": "https://justinholt.com",
-        "documentationUrl": "https://github.com/justinholtweb/craft-controltower",
+        "documentationUrl": "https://github.com/justinholtweb/craft-control-tower",
         "class": "justinholtweb\\controltower\\Plugin",
         "hasCpSection": true,
         "hasCpSettings": true
