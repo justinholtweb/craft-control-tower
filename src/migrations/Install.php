@@ -30,8 +30,17 @@ class Install extends Migration
         return true;
     }
 
+    private function _tableExists(string $table): bool
+    {
+        return $this->db->getSchema()->getTableSchema($table, true) !== null;
+    }
+
     private function _createVisitorsTable(): void
     {
+        if ($this->_tableExists('{{%controltower_visitors}}')) {
+            return;
+        }
+
         $this->createTable('{{%controltower_visitors}}', [
             'id' => $this->primaryKey(),
             'sessionHash' => $this->string(64)->notNull(),
@@ -55,6 +64,10 @@ class Install extends Migration
 
     private function _createEditorSessionsTable(): void
     {
+        if ($this->_tableExists('{{%controltower_editor_sessions}}')) {
+            return;
+        }
+
         $this->createTable('{{%controltower_editor_sessions}}', [
             'id' => $this->primaryKey(),
             'userId' => $this->integer()->notNull(),
@@ -85,6 +98,10 @@ class Install extends Migration
 
     private function _createEditorActivityTable(): void
     {
+        if ($this->_tableExists('{{%controltower_editor_activity}}')) {
+            return;
+        }
+
         $this->createTable('{{%controltower_editor_activity}}', [
             'id' => $this->primaryKey(),
             'userId' => $this->integer()->notNull(),
@@ -114,6 +131,10 @@ class Install extends Migration
 
     private function _createContentEventsTable(): void
     {
+        if ($this->_tableExists('{{%controltower_content_events}}')) {
+            return;
+        }
+
         $this->createTable('{{%controltower_content_events}}', [
             'id' => $this->primaryKey(),
             'elementType' => $this->string(50)->notNull(),
@@ -132,6 +153,10 @@ class Install extends Migration
 
     private function _createMetricSamplesTable(): void
     {
+        if ($this->_tableExists('{{%controltower_metric_samples}}')) {
+            return;
+        }
+
         $this->createTable('{{%controltower_metric_samples}}', [
             'id' => $this->primaryKey(),
             'cpuPercent' => $this->float()->null(),
@@ -150,6 +175,10 @@ class Install extends Migration
 
     private function _createAlertsTable(): void
     {
+        if ($this->_tableExists('{{%controltower_alerts}}')) {
+            return;
+        }
+
         $this->createTable('{{%controltower_alerts}}', [
             'id' => $this->primaryKey(),
             'type' => $this->string(100)->notNull(),

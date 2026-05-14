@@ -1,5 +1,10 @@
 # Release Notes for Control Tower
 
+## 5.0.2 - 2026-05-14
+
+### Fixed
+- Install migration now skips table creation if the table already exists, so installing on a load-balanced environment with a shared database no longer fails on the second node.
+
 ## 5.0.1 - 2026-05-14
 
 ### Fixed
