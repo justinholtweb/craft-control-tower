@@ -4,6 +4,7 @@
 
 ### Fixed
 - Plugin store install failing with “Table `controltower_editor_sessions` doesn't exist” because activity tracking ran before the install migration. Tracking now waits until the plugin is fully installed.
+- Correct documentation URL in composer.json to point to https://craft-controltower.com/docs instead of the placeholder URL. (Thanks @brandonkelly!)    
 
 ## 5.0.0 - 2026-05-02
 
