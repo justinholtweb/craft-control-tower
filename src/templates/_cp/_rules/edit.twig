@@ -1,0 +1,171 @@
+{% extends 'control-tower/_cp/_layout' %}
+
+{% import '_includes/forms.twig' as forms %}
+
+{% set crumbs = [
+    { label: 'Alert Rules', url: cpUrl('control-tower/rules') },
+] %}
+
+{% block dashboard %}
+    <form method="post" accept-charset="UTF-8">
+        {{ csrfInput() }}
+        {{ actionInput('control-tower/rules/save') }}
+        {% if rule.id %}{{ hiddenInput('id', rule.id) }}{% endif %}
+
+        <div class="ct-grid ct-grid--2">
+            <div class="ct-panel">
+                <div class="ct-panel__header">
+                    <h3 class="ct-panel__title">Rule</h3>
+                </div>
+                <div class="ct-panel__body">
+                    {{ forms.textField({
+                        label: 'Name',
+                        id: 'name',
+                        name: 'name',
+                        value: rule.name,
+                        required: true,
+                        errors: rule.getErrors('name'),
+                    }) }}
+
+                    {{ forms.textareaField({
+                        label: 'Description',
+                        id: 'description',
+                        name: 'description',
+                        value: rule.description,
+                        rows: 2,
+                    }) }}
+
+                    {% set metricOptions = [] %}
+                    {% for key, meta in registry %}
+                        {% set metricOptions = metricOptions|merge([{ label: meta.label, value: key }]) %}
+                    {% endfor %}
+
+                    {{ forms.selectField({
+                        label: 'Metric',
+                        id: 'metric',
+                        name: 'metric',
+                        value: rule.metric,
+                        options: metricOptions,
+                        required: true,
+                        errors: rule.getErrors('metric'),
+                    }) }}
+
+                    <div class="flex">
+                        <div style="flex:0 0 120px;">
+                            {{ forms.selectField({
+                                label: 'Operator',
+                                id: 'operator',
+                                name: 'operator',
+                                value: rule.operator,
+                                options: operators,
+                                required: true,
+                                errors: rule.getErrors('operator'),
+                            }) }}
+                        </div>
+                        <div style="flex:1;">
+                            {{ forms.textField({
+                                label: 'Threshold',
+                                id: 'threshold',
+                                name: 'threshold',
+                                value: rule.threshold,
+                                type: 'number',
+                                step: 'any',
+                                required: true,
+                                errors: rule.getErrors('threshold'),
+                            }) }}
+                        </div>
+                    </div>
+
+                    {{ forms.selectField({
+                        label: 'Severity',
+                        id: 'severity',
+                        name: 'severity',
+                        value: rule.severity,
+                        options: severities,
+                        required: true,
+                        errors: rule.getErrors('severity'),
+                    }) }}
+
+                    {{ forms.lightswitchField({
+                        label: 'Enabled',
+                        id: 'isEnabled',
+                        name: 'isEnabled',
+                        on: rule.isEnabled,
+                    }) }}
+                </div>
+            </div>
+
+            <div class="ct-panel">
+                <div class="ct-panel__header">
+                    <h3 class="ct-panel__title">Notifications</h3>
+                </div>
+                <div class="ct-panel__body">
+                    {{ forms.lightswitchField({
+                        label: 'Email all admin users',
+                        id: 'notifyAdmins',
+                        name: 'notifyAdmins',
+                        on: rule.notifyAdmins,
+                    }) }}
+
+                    {{ forms.textareaField({
+                        label: 'Additional email recipients',
+                        instructions: 'One per line, or comma-separated.',
+                        id: 'notifyEmails',
+                        name: 'notifyEmails',
+                        value: rule.notifyEmails,
+                        rows: 3,
+                        errors: rule.getErrors('notifyEmails'),
+                    }) }}
+
+                    {% if webhooks|length %}
+                        {% set webhookOptions = [] %}
+                        {% for w in webhooks %}
+                            {% set webhookOptions = webhookOptions|merge([{
+                                label: w.name ~ ' (' ~ w.type ~ ')' ~ (w.isEnabled ? '' : ' — disabled'),
+                                value: w.id,
+                            }]) %}
+                        {% endfor %}
+
+                        {{ forms.checkboxGroupField({
+                            label: 'Webhooks',
+                            id: 'webhookIds',
+                            name: 'webhookIds',
+                            values: rule.webhookIds,
+                            options: webhookOptions,
+                        }) }}
+                    {% else %}
+                        <div class="field">
+                            <div class="heading"><label>Webhooks</label></div>
+                            <div class="instructions">
+                                No webhooks defined yet. <a href="{{ cpUrl('control-tower/webhooks/new') }}">Add one</a> to send alerts to Slack, Teams, or Zapier.
+                            </div>
+                        </div>
+                    {% endif %}
+
+                    {{ forms.lightswitchField({
+                        label: 'Also notify when alert resolves',
+                        id: 'notifyOnResolve',
+                        name: 'notifyOnResolve',
+                        on: rule.notifyOnResolve,
+                    }) }}
+
+                    {{ forms.textField({
+                        label: 'Minimum interval between notifications (minutes)',
+                        instructions: 'Suppresses repeat notifications if the alert flaps. 0 = no throttle.',
+                        id: 'minNotifyInterval',
+                        name: 'minNotifyInterval',
+                        value: rule.minNotifyInterval,
+                        type: 'number',
+                        min: 0,
+                        size: 5,
+                    }) }}
+                </div>
+            </div>
+        </div>
+
+        <div style="margin-top:20px;">
+            <button type="submit" class="btn submit">Save rule</button>
+            <a href="{{ cpUrl('control-tower/rules') }}" class="btn">Cancel</a>
+        </div>
+    </form>
+{% endblock %}

@@ -1,0 +1,71 @@
+{% extends 'control-tower/_cp/_layout' %}
+
+{% block dashboard %}
+    <div class="ct-panel">
+        <div class="ct-panel__header" style="display:flex; align-items:center; justify-content:space-between;">
+            <h3 class="ct-panel__title">Alert Rules</h3>
+            <a href="{{ cpUrl('control-tower/rules/new') }}" class="btn submit add icon">New rule</a>
+        </div>
+        <div class="ct-panel__body ct-panel__body--flush">
+            <table class="ct-table data fullwidth">
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Metric</th>
+                        <th>Condition</th>
+                        <th>Severity</th>
+                        <th>Notifications</th>
+                        <th>Status</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for rule in rules %}
+                        {% set meta = registry[rule.metric] ?? null %}
+                        {% set unit = meta ? meta.unit : '' %}
+                        <tr>
+                            <td>
+                                <a href="{{ cpUrl('control-tower/rules/' ~ rule.id) }}">
+                                    <strong>{{ rule.name }}</strong>
+                                </a>
+                                {% if rule.description %}
+                                    <div class="light" style="font-size:11px; margin-top:2px;">{{ rule.description }}</div>
+                                {% endif %}
+                            </td>
+                            <td>{{ meta ? meta.label : rule.metric }}</td>
+                            <td>
+                                <code>{{ rule.operator }} {{ rule.threshold }}{{ unit == '%' ? '%' : (' ' ~ unit) }}</code>
+                            </td>
+                            <td><span class="ct-badge ct-badge--{{ rule.severity }}">{{ rule.severity }}</span></td>
+                            <td>
+                                {% set channels = [] %}
+                                {% if rule.notifyAdmins %}{% set channels = channels|merge(['admins']) %}{% endif %}
+                                {% set emailList = rule.parseEmails() %}
+                                {% if emailList|length %}{% set channels = channels|merge([emailList|length ~ ' email' ~ (emailList|length == 1 ? '' : 's')]) %}{% endif %}
+                                {% if rule.webhookIds|length %}{% set channels = channels|merge([rule.webhookIds|length ~ ' webhook' ~ (rule.webhookIds|length == 1 ? '' : 's')]) %}{% endif %}
+                                {{ channels|length ? channels|join(', ') : '—' }}
+                            </td>
+                            <td>
+                                {% if rule.isEnabled %}
+                                    <span class="status green"></span> Enabled
+                                {% else %}
+                                    <span class="status"></span> Disabled
+                                {% endif %}
+                            </td>
+                            <td class="thin">
+                                <form method="post" style="display:inline;">
+                                    {{ csrfInput() }}
+                                    {{ hiddenInput('action', 'control-tower/rules/delete') }}
+                                    {{ hiddenInput('id', rule.id) }}
+                                    <button type="submit" class="btn small delete icon" data-confirm="Delete this rule?">Delete</button>
+                                </form>
+                            </td>
+                        </tr>
+                    {% else %}
+                        <tr><td colspan="7" class="ct-empty">No alert rules yet. <a href="{{ cpUrl('control-tower/rules/new') }}">Create the first one</a>.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+{% endblock %}

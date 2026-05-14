@@ -26,13 +26,7 @@
     on: settings.trackServerMetrics,
 }) }}
 
-{{ forms.lightswitchField({
-    label: 'Collision Detection',
-    instructions: 'Alert when multiple editors are working on the same content.',
-    id: 'enableCollisionDetection',
-    name: 'settings[enableCollisionDetection]',
-    on: settings.enableCollisionDetection,
-}) }}
+{# Deprecated as of 5.1.0 — alert rules are now configurable per-rule. Kept for back-compat with existing config overrides; no longer drives behavior. #}
 
 <hr>
 <h2>Refresh &amp; Timeouts</h2>
@@ -143,37 +137,14 @@
 }) }}
 
 <hr>
-<h2>Alert Thresholds</h2>
+<h2>Alerts</h2>
 
-{{ forms.textField({
-    label: 'Queue Failure Alert Threshold',
-    instructions: 'Number of failed queue jobs before triggering an alert.',
-    id: 'queueFailureAlertThreshold',
-    name: 'settings[queueFailureAlertThreshold]',
-    value: settings.queueFailureAlertThreshold,
-    type: 'number',
-    min: 1,
-    size: 5,
-}) }}
+<p class="instructions">
+    Alert thresholds are now configured per-rule. Visit
+    <a href="{{ cpUrl('control-tower/rules') }}">Alert Rules</a>
+    to add or edit alert conditions.
+</p>
 
-{{ forms.textField({
-    label: '5xx Error Rate Threshold',
-    instructions: 'Errors per minute before triggering an alert.',
-    id: 'errorRateAlertThreshold',
-    name: 'settings[errorRateAlertThreshold]',
-    value: settings.errorRateAlertThreshold,
-    type: 'number',
-    min: 1,
-    size: 5,
-}) }}
-
-{{ forms.textField({
-    label: '404 Spike Threshold',
-    instructions: '404s per minute before triggering an alert.',
-    id: 'notFoundAlertThreshold',
-    name: 'settings[notFoundAlertThreshold]',
-    value: settings.notFoundAlertThreshold,
-    type: 'number',
-    min: 1,
-    size: 5,
-}) }}
+{# The following settings are deprecated as of 5.1.0 and no longer drive behavior — they remain on the Settings model so existing
+   config/control-tower.php overrides do not break: queueFailureAlertThreshold, errorRateAlertThreshold, notFoundAlertThreshold,
+   enableCollisionDetection. #}

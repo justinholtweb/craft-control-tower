@@ -1,0 +1,106 @@
+{% extends 'control-tower/_cp/_layout' %}
+
+{% import '_includes/forms.twig' as forms %}
+
+{% set typeOptions = [] %}
+{% for value, label in types %}
+    {% set typeOptions = typeOptions|merge([{ label: label, value: value }]) %}
+{% endfor %}
+
+{% block dashboard %}
+    <form method="post" accept-charset="UTF-8" id="ct-webhook-form">
+        {{ csrfInput() }}
+        {{ actionInput('control-tower/webhooks/save') }}
+        {% if webhook.id %}{{ hiddenInput('id', webhook.id) }}{% endif %}
+
+        <div class="ct-panel">
+            <div class="ct-panel__header">
+                <h3 class="ct-panel__title">{{ webhook.id ? 'Edit Webhook' : 'New Webhook' }}</h3>
+            </div>
+            <div class="ct-panel__body">
+                {{ forms.textField({
+                    label: 'Name',
+                    id: 'name',
+                    name: 'name',
+                    value: webhook.name,
+                    required: true,
+                    errors: webhook.getErrors('name'),
+                    placeholder: 'e.g. Engineering Slack',
+                }) }}
+
+                {{ forms.selectField({
+                    label: 'Type',
+                    id: 'type',
+                    name: 'type',
+                    value: webhook.type,
+                    options: typeOptions,
+                    required: true,
+                    errors: webhook.getErrors('type'),
+                }) }}
+
+                {{ forms.textField({
+                    label: 'Webhook URL',
+                    instructions: 'For Slack: an Incoming Webhook URL. For Teams: a Power Automate workflow URL. For Zapier: a Catch Hook URL.',
+                    id: 'url',
+                    name: 'url',
+                    value: webhook.url,
+                    type: 'url',
+                    required: true,
+                    errors: webhook.getErrors('url'),
+                    placeholder: 'https://hooks.slack.com/services/...',
+                }) }}
+
+                {{ forms.lightswitchField({
+                    label: 'Enabled',
+                    id: 'isEnabled',
+                    name: 'isEnabled',
+                    on: webhook.isEnabled,
+                }) }}
+            </div>
+        </div>
+
+        <div style="margin-top:20px; display:flex; gap:10px; align-items:center;">
+            <button type="submit" class="btn submit">Save webhook</button>
+            <a href="{{ cpUrl('control-tower/webhooks') }}" class="btn">Cancel</a>
+            <button type="button" class="btn" id="ct-webhook-test">Send test</button>
+            <span id="ct-webhook-test-result" style="margin-left:10px; font-size:12px;"></span>
+        </div>
+    </form>
+
+    {% js %}
+        (function () {
+            var btn = document.getElementById('ct-webhook-test');
+            if (!btn) return;
+            var resultEl = document.getElementById('ct-webhook-test-result');
+            var form = document.getElementById('ct-webhook-form');
+
+            btn.addEventListener('click', function () {
+                resultEl.textContent = 'Sending…';
+                resultEl.style.color = '';
+
+                var data = new FormData();
+                data.append(Craft.csrfTokenName, Craft.csrfTokenValue);
+                ['id', 'name', 'type', 'url'].forEach(function (field) {
+                    var el = form.querySelector('[name="' + field + '"]');
+                    if (el && el.value) data.append(field, el.value);
+                });
+
+                fetch(Craft.getActionUrl('control-tower/webhooks/test'), {
+                    method: 'POST',
+                    headers: { Accept: 'application/json' },
+                    credentials: 'same-origin',
+                    body: data,
+                })
+                    .then(function (r) { return r.json(); })
+                    .then(function (json) {
+                        resultEl.textContent = json.message || (json.success ? 'OK' : 'Failed');
+                        resultEl.style.color = json.success ? '#27ae60' : '#c0392b';
+                    })
+                    .catch(function (err) {
+                        resultEl.textContent = 'Request failed: ' + err.message;
+                        resultEl.style.color = '#c0392b';
+                    });
+            });
+        })();
+    {% endjs %}
+{% endblock %}

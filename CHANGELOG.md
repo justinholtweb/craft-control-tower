@@ -1,5 +1,29 @@
 # Release Notes for Control Tower
 
+## 5.1.0 - 2026-05-14
+
+### Added
+- **User-configurable alert rules.** New Alerts → Rules section lets users define alert conditions in the CMS without editing config. Each rule has a metric, operator, threshold, severity, and enable toggle.
+- **Webhook notifications** for Slack, Microsoft Teams (Power Automate / Adaptive Cards), and generic JSON receivers like Zapier. Defined once globally and referenced per-rule.
+- **Per-rule email recipients.** “Notify admins” toggle plus a freeform list of additional email addresses.
+- **Send test** button on the webhook edit page — fires a sample payload and reports delivery status inline.
+- **Flap throttle** — `minNotifyInterval` (minutes) per rule suppresses repeat notifications when an alert flaps. Alert still appears in the CP regardless.
+- **Notify on resolve** option per rule.
+- **User permissions** — `controltower:viewDashboard`, `controltower:manageAlerts`, and `controltower:manageSettings`. CP navigation respects them so non-admin users can be granted scoped access.
+- **Metric registry** — extensible list of metrics that rules can target: queue failed/pending, CPU/memory/disk %, editor collisions, active editor count, stale content count.
+- Alerts now record which rule fired them via a new `alertRuleId` foreign key; the alerts UI shows the rule name instead of the internal type slug.
+- Email template at `templates/_cp/_emails/alert.twig`, overrideable by site builders.
+- `SendAlertNotificationJob` queue job — notifications dispatch asynchronously so SMTP / webhook latency doesn't block the request that triggers the alert.
+
+### Changed
+- The three hardcoded checks (queue failure, editor collisions, server resources) are now data — seeded as default rules on install. Existing installs are migrated automatically by the install of the new schema. The corresponding settings (`queueFailureAlertThreshold`, `enableCollisionDetection`) are now ignored; configure the seeded rules instead.
+- `Plugin::PERMISSION_VIEW` replaces the implicit `accessPlugin-control-tower` requirement in controllers.
+
+### Migration
+- New tables: `controltower_alert_rules`, `controltower_webhooks`.
+- New column: `alertRuleId` on `controltower_alerts` (FK to alert rules, SET NULL on delete).
+- Schema version bumped to 1.1.0.
+
 ## 5.0.2 - 2026-05-14
 
 ### Fixed

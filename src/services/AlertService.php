@@ -4,8 +4,11 @@ namespace justinholtweb\controltower\services;
 
 use Craft;
 use craft\helpers\Db;
+use justinholtweb\controltower\jobs\SendAlertNotificationJob;
+use justinholtweb\controltower\models\AlertRule;
 use justinholtweb\controltower\Plugin;
 use justinholtweb\controltower\records\AlertRecord;
+use justinholtweb\controltower\records\AlertRuleRecord;
 use yii\base\Component;
 
 class AlertService extends Component
@@ -14,21 +17,98 @@ class AlertService extends Component
     public const SEVERITY_WARNING = 'warning';
     public const SEVERITY_CRITICAL = 'critical';
 
-    public const TYPE_QUEUE_FAILURE = 'queue_failure';
-    public const TYPE_EDITOR_COLLISION = 'editor_collision';
-    public const TYPE_HIGH_ERROR_RATE = 'high_error_rate';
-    public const TYPE_HIGH_404_RATE = 'high_404_rate';
-    public const TYPE_STALE_CONTENT = 'stale_content';
-    public const TYPE_SERVER_RESOURCE = 'server_resource';
-    public const TYPE_PENDING_UPDATES = 'pending_updates';
-    public const TYPE_FAILED_CRON = 'failed_cron';
+    // ----- Rules CRUD -----
 
-    public function createAlert(string $type, string $severity, string $message, ?array $context = null): void
+    /**
+     * @return AlertRule[]
+     */
+    public function getRules(?bool $enabledOnly = null): array
     {
-        // Avoid duplicate active alerts of the same type
-        $existing = AlertRecord::find()
-            ->where(['type' => $type, 'isActive' => true])
-            ->one();
+        $query = AlertRuleRecord::find();
+        if ($enabledOnly === true) {
+            $query->where(['isEnabled' => true]);
+        }
+        $records = $query->orderBy(['severity' => SORT_ASC, 'name' => SORT_ASC])->all();
+
+        return array_map(fn($r) => $this->_recordToRule($r), $records);
+    }
+
+    public function getRule(int $id): ?AlertRule
+    {
+        $record = AlertRuleRecord::findOne(['id' => $id]);
+        return $record ? $this->_recordToRule($record) : null;
+    }
+
+    public function saveRule(AlertRule $rule): bool
+    {
+        if (!$rule->validate()) {
+            return false;
+        }
+
+        $record = $rule->id ? AlertRuleRecord::findOne(['id' => $rule->id]) : null;
+        if (!$record) {
+            $record = new AlertRuleRecord();
+        }
+
+        $record->name = $rule->name;
+        $record->description = $rule->description;
+        $record->metric = $rule->metric;
+        $record->operator = $rule->operator;
+        $record->threshold = $rule->threshold;
+        $record->severity = $rule->severity;
+        $record->isEnabled = $rule->isEnabled;
+        $record->notifyAdmins = $rule->notifyAdmins;
+        $record->notifyEmails = $rule->notifyEmails;
+        $record->webhookIds = !empty($rule->webhookIds) ? json_encode(array_values(array_map('intval', $rule->webhookIds))) : null;
+        $record->notifyOnResolve = $rule->notifyOnResolve;
+        $record->minNotifyInterval = $rule->minNotifyInterval;
+
+        if (!$record->save()) {
+            foreach ($record->getErrors() as $attr => $errs) {
+                foreach ($errs as $err) {
+                    $rule->addError($attr, $err);
+                }
+            }
+            return false;
+        }
+
+        $rule->id = $record->id;
+        return true;
+    }
+
+    public function deleteRule(int $id): bool
+    {
+        $record = AlertRuleRecord::findOne(['id' => $id]);
+        if (!$record) {
+            return false;
+        }
+        return (bool) $record->delete();
+    }
+
+    public function toggleRule(int $id): ?AlertRule
+    {
+        $record = AlertRuleRecord::findOne(['id' => $id]);
+        if (!$record) {
+            return null;
+        }
+        $record->isEnabled = !$record->isEnabled;
+        $record->save(false, ['isEnabled', 'dateUpdated']);
+        return $this->_recordToRule($record);
+    }
+
+    // ----- Alert records (existing read API, with light tweaks) -----
+
+    public function createAlert(
+        string $type,
+        string $severity,
+        string $message,
+        ?array $context = null,
+        ?int $ruleId = null,
+    ): void {
+        // Dedupe key: rule when provided, otherwise type (back-compat).
+        $existing = $this->_findActiveAlert($ruleId, $type);
+
+        $wasInactive = $existing === null;
 
         if ($existing) {
             $existing->message = $message;
@@ -39,6 +119,7 @@ class AlertService extends Component
         }
 
         $record = new AlertRecord();
+        $record->alertRuleId = $ruleId;
         $record->type = $type;
         $record->severity = $severity;
         $record->message = $message;
@@ -46,31 +127,34 @@ class AlertService extends Component
         $record->isActive = true;
         $record->createdAt = Db::prepareDateForDb(new \DateTime());
         $record->save(false);
+
+        if ($wasInactive && $ruleId !== null) {
+            $this->_pushNotification((int) $record->id, 'firing');
+        }
     }
 
-    public function resolveAlert(string $type): void
+    public function resolveAlert(string $type, ?int $ruleId = null): void
     {
-        $alert = AlertRecord::find()
-            ->where(['type' => $type, 'isActive' => true])
-            ->one();
+        $alert = $this->_findActiveAlert($ruleId, $type);
+        if (!$alert) {
+            return;
+        }
 
-        if ($alert) {
-            $alert->isActive = false;
-            $alert->resolvedAt = Db::prepareDateForDb(new \DateTime());
-            $alert->save(false);
+        $alert->isActive = false;
+        $alert->resolvedAt = Db::prepareDateForDb(new \DateTime());
+        $alert->save(false);
+
+        if ($ruleId !== null) {
+            $rule = $this->getRule($ruleId);
+            if ($rule && $rule->notifyOnResolve) {
+                $this->_pushNotification((int) $alert->id, 'resolved');
+            }
         }
     }
 
     public function getActiveAlerts(): array
     {
-        return array_map(fn($record) => [
-            'id' => $record->id,
-            'type' => $record->type,
-            'severity' => $record->severity,
-            'message' => $record->message,
-            'context' => $record->context ? json_decode($record->context, true) : null,
-            'createdAt' => $record->createdAt,
-        ], AlertRecord::find()
+        return array_map(fn($r) => $this->_alertToArray($r), AlertRecord::find()
             ->where(['isActive' => true])
             ->orderBy(['severity' => SORT_ASC, 'createdAt' => SORT_DESC])
             ->all());
@@ -78,42 +162,69 @@ class AlertService extends Component
 
     public function getActiveAlertCount(): int
     {
-        return (int) AlertRecord::find()
-            ->where(['isActive' => true])
-            ->count();
+        return (int) AlertRecord::find()->where(['isActive' => true])->count();
     }
 
     public function getAlertHistory(int $limit = 50): array
     {
-        return array_map(fn($record) => [
-            'id' => $record->id,
-            'type' => $record->type,
-            'severity' => $record->severity,
-            'message' => $record->message,
-            'isActive' => (bool) $record->isActive,
-            'createdAt' => $record->createdAt,
-            'resolvedAt' => $record->resolvedAt,
-        ], AlertRecord::find()
+        return array_map(fn($r) => $this->_alertToArray($r, includeResolved: true), AlertRecord::find()
             ->orderBy(['createdAt' => SORT_DESC])
             ->limit($limit)
             ->all());
     }
 
+    // ----- Checks -----
+
     /**
-     * Run all alert checks. Call this periodically (e.g., from a queue job or cron).
+     * Evaluate every enabled rule. Called from RunAlertChecksJob.
      */
     public function runChecks(): void
     {
-        $this->_checkQueueFailures();
-        $this->_checkEditorCollisions();
-        $this->_checkServerResources();
+        $registry = Plugin::getInstance()->metricRegistry;
+
+        foreach ($this->getRules(enabledOnly: true) as $rule) {
+            if (!$registry->has($rule->metric)) {
+                Craft::warning("Control Tower rule {$rule->id} references unknown metric “{$rule->metric}” — skipping.", __METHOD__);
+                continue;
+            }
+
+            $value = $registry->evaluate($rule->metric);
+            if ($value === null) {
+                continue;
+            }
+
+            $type = "rule_{$rule->id}";
+
+            if ($rule->evaluate($value)) {
+                $unit = $registry->get($rule->metric)['unit'] ?? '';
+                $valueStr = $this->_formatValue($value, $unit);
+                $thresholdStr = $this->_formatValue((float) $rule->threshold, $unit);
+                $message = "{$rule->name} — observed {$valueStr} (threshold {$rule->operator} {$thresholdStr}).";
+
+                $this->createAlert(
+                    type: $type,
+                    severity: $rule->severity,
+                    message: $message,
+                    context: [
+                        'metric' => $rule->metric,
+                        'operator' => $rule->operator,
+                        'threshold' => $rule->threshold,
+                        'observedValue' => $value,
+                        'unit' => $unit,
+                    ],
+                    ruleId: $rule->id,
+                );
+            } else {
+                $this->resolveAlert(type: $type, ruleId: $rule->id);
+            }
+        }
     }
 
     public function cleanup(int $retentionDays = 90): int
     {
         $cutoff = Db::prepareDateForDb(new \DateTime("-{$retentionDays} days"));
 
-        return Craft::$app->getDb()->createCommand()
+        return (int) Craft::$app->getDb()->createCommand()
             ->delete('{{%controltower_alerts}}', [
                 'and',
                 ['isActive' => false],
@@ -122,72 +233,81 @@ class AlertService extends Component
             ->execute();
     }
 
-    private function _checkQueueFailures(): void
-    {
-        $plugin = Plugin::getInstance();
-        $queueSummary = $plugin->queueMonitor->getSummary();
-        $threshold = $plugin->getSettings()->queueFailureAlertThreshold;
+    // ----- Internals -----
 
-        if ($queueSummary['failed'] >= $threshold) {
-            $this->createAlert(
-                self::TYPE_QUEUE_FAILURE,
-                self::SEVERITY_CRITICAL,
-                "Queue has {$queueSummary['failed']} failed job(s).",
-                ['failedCount' => $queueSummary['failed']],
-            );
+    private function _findActiveAlert(?int $ruleId, string $type): ?AlertRecord
+    {
+        $q = AlertRecord::find()->where(['isActive' => true]);
+        if ($ruleId !== null) {
+            $q->andWhere(['alertRuleId' => $ruleId]);
         } else {
-            $this->resolveAlert(self::TYPE_QUEUE_FAILURE);
+            $q->andWhere(['type' => $type]);
+        }
+        return $q->one();
+    }
+
+    private function _pushNotification(int $alertId, string $event): void
+    {
+        try {
+            Craft::$app->getQueue()->push(new SendAlertNotificationJob([
+                'alertId' => $alertId,
+                'event' => $event,
+            ]));
+        } catch (\Throwable $e) {
+            Craft::error('Control Tower: failed to enqueue notification job: ' . $e->getMessage(), __METHOD__);
         }
     }
 
-    private function _checkEditorCollisions(): void
+    private function _alertToArray(AlertRecord $record, bool $includeResolved = false): array
     {
-        $plugin = Plugin::getInstance();
-        if (!$plugin->getSettings()->enableCollisionDetection) {
-            return;
+        $ruleName = null;
+        if ($record->alertRuleId) {
+            $rule = AlertRuleRecord::findOne(['id' => $record->alertRuleId]);
+            $ruleName = $rule?->name;
         }
 
-        $collisions = $plugin->editorTracking->getCollisions();
-
-        if (!empty($collisions)) {
-            $messages = [];
-            foreach ($collisions as $collision) {
-                $messages[] = "Element #{$collision['elementId']} has {$collision['editorCount']} editors";
-            }
-            $this->createAlert(
-                self::TYPE_EDITOR_COLLISION,
-                self::SEVERITY_WARNING,
-                implode('; ', $messages),
-                ['collisions' => $collisions],
-            );
-        } else {
-            $this->resolveAlert(self::TYPE_EDITOR_COLLISION);
+        $row = [
+            'id' => $record->id,
+            'alertRuleId' => $record->alertRuleId,
+            'type' => $record->type,
+            'ruleName' => $ruleName,
+            'displayLabel' => $ruleName ?? $record->type,
+            'severity' => $record->severity,
+            'message' => $record->message,
+            'context' => $record->context ? json_decode($record->context, true) : null,
+            'createdAt' => $record->createdAt,
+        ];
+        if ($includeResolved) {
+            $row['isActive'] = (bool) $record->isActive;
+            $row['resolvedAt'] = $record->resolvedAt;
         }
+        return $row;
     }
 
-    private function _checkServerResources(): void
+    private function _recordToRule(AlertRuleRecord $record): AlertRule
     {
-        $plugin = Plugin::getInstance();
-        $health = $plugin->metricsCollector->getServerHealth();
+        $rule = new AlertRule();
+        $rule->id = (int) $record->id;
+        $rule->name = (string) $record->name;
+        $rule->description = $record->description;
+        $rule->metric = (string) $record->metric;
+        $rule->operator = (string) $record->operator;
+        $rule->threshold = (float) $record->threshold;
+        $rule->severity = (string) $record->severity;
+        $rule->isEnabled = (bool) $record->isEnabled;
+        $rule->notifyAdmins = (bool) $record->notifyAdmins;
+        $rule->notifyEmails = $record->notifyEmails;
+        $decoded = $record->webhookIds ? json_decode((string) $record->webhookIds, true) : [];
+        $rule->webhookIds = is_array($decoded) ? array_values(array_map('intval', $decoded)) : [];
+        $rule->notifyOnResolve = (bool) $record->notifyOnResolve;
+        $rule->minNotifyInterval = (int) $record->minNotifyInterval;
+        $rule->lastNotifiedAt = $record->lastNotifiedAt;
+        return $rule;
+    }
 
-        if ($health === 'critical') {
-            $snapshot = $plugin->metricsCollector->getCurrentSnapshot();
-            $this->createAlert(
-                self::TYPE_SERVER_RESOURCE,
-                self::SEVERITY_CRITICAL,
-                'Server resources critically high — CPU: ' . ($snapshot['cpuPercent'] ?? '?') . '%, Memory: ' . ($snapshot['memoryPercent'] ?? '?') . '%, Disk: ' . ($snapshot['diskPercent'] ?? '?') . '%',
-                $snapshot,
-            );
-        } elseif ($health === 'warning') {
-            $snapshot = $plugin->metricsCollector->getCurrentSnapshot();
-            $this->createAlert(
-                self::TYPE_SERVER_RESOURCE,
-                self::SEVERITY_WARNING,
-                'Server resources elevated — CPU: ' . ($snapshot['cpuPercent'] ?? '?') . '%, Memory: ' . ($snapshot['memoryPercent'] ?? '?') . '%, Disk: ' . ($snapshot['diskPercent'] ?? '?') . '%',
-                $snapshot,
-            );
-        } else {
-            $this->resolveAlert(self::TYPE_SERVER_RESOURCE);
-        }
+    private function _formatValue(float $value, string $unit): string
+    {
+        $rounded = abs($value - round($value)) < 0.01 ? (string) (int) round($value) : (string) round($value, 2);
+        return $unit === '%' ? "{$rounded}%" : trim("{$rounded} {$unit}");
     }
 }

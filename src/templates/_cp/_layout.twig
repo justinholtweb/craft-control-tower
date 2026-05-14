@@ -3,15 +3,27 @@
 {% set title = title ?? 'Control Tower' %}
 {% set selectedSubnavItem = selectedTab ?? 'overview' %}
 
-{% set tabs = {
-    overview: { label: 'Overview', url: cpUrl('control-tower') },
-    visitors: { label: 'Live Traffic', url: cpUrl('control-tower/visitors') },
-    editors: { label: 'Editors', url: cpUrl('control-tower/editors') },
-    content: { label: 'Content Health', url: cpUrl('control-tower/content') },
-    queue: { label: 'Queue Watch', url: cpUrl('control-tower/queue') },
-    system: { label: 'System Pulse', url: cpUrl('control-tower/system') },
-    alerts: { label: 'Alerts', url: cpUrl('control-tower/alerts') },
-} %}
+{% set canView = currentUser.can('controltower:viewDashboard') %}
+{% set canManageAlerts = currentUser.can('controltower:manageAlerts') %}
+
+{% set tabs = {} %}
+{% if canView %}
+    {% set tabs = tabs|merge({
+        overview: { label: 'Overview', url: cpUrl('control-tower') },
+        visitors: { label: 'Live Traffic', url: cpUrl('control-tower/visitors') },
+        editors: { label: 'Editors', url: cpUrl('control-tower/editors') },
+        content: { label: 'Content Health', url: cpUrl('control-tower/content') },
+        queue: { label: 'Queue Watch', url: cpUrl('control-tower/queue') },
+        system: { label: 'System Pulse', url: cpUrl('control-tower/system') },
+        alerts: { label: 'Alerts', url: cpUrl('control-tower/alerts') },
+    }) %}
+{% endif %}
+{% if canManageAlerts %}
+    {% set tabs = tabs|merge({
+        rules: { label: 'Alert Rules', url: cpUrl('control-tower/rules') },
+        webhooks: { label: 'Webhooks', url: cpUrl('control-tower/webhooks') },
+    }) %}
+{% endif %}
 
 {% block content %}
     <div id="ct-dashboard"

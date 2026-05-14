@@ -1,0 +1,60 @@
+{% set rule = ctx.rule %}
+{% set alert = ctx.alert %}
+{% set verb = ctx.event == 'resolved' ? 'Resolved' : 'Firing' %}
+{% set color = '#' ~ ctx.severityColorHex() %}
+{% set decoded = ctx.decodedContext() %}
+
+<!doctype html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>{{ verb }}: {{ rule.name }}</title>
+</head>
+<body style="margin:0; padding:24px; background:#f4f5f7; font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif; color:#1f2933;">
+    <div style="max-width:560px; margin:0 auto; background:#ffffff; border:1px solid #e1e4e8; border-radius:8px; overflow:hidden;">
+        <div style="background:{{ color }}; color:#ffffff; padding:16px 24px;">
+            <div style="font-size:12px; text-transform:uppercase; letter-spacing:0.06em; opacity:0.9;">{{ verb }} · {{ rule.severity }}</div>
+            <div style="font-size:20px; font-weight:600; margin-top:4px;">{{ rule.name }}</div>
+        </div>
+        <div style="padding:20px 24px;">
+            <p style="margin:0 0 16px 0; font-size:15px; line-height:1.5;">{{ alert.message }}</p>
+
+            <table style="border-collapse:collapse; width:100%; font-size:13px;">
+                <tr>
+                    <td style="padding:6px 0; color:#5f6b7a; width:140px;">Site</td>
+                    <td style="padding:6px 0;">{{ ctx.siteName }}</td>
+                </tr>
+                <tr>
+                    <td style="padding:6px 0; color:#5f6b7a;">Environment</td>
+                    <td style="padding:6px 0;">{{ ctx.environment }}</td>
+                </tr>
+                <tr>
+                    <td style="padding:6px 0; color:#5f6b7a;">Metric</td>
+                    <td style="padding:6px 0;"><code>{{ rule.metric }}</code></td>
+                </tr>
+                <tr>
+                    <td style="padding:6px 0; color:#5f6b7a;">Condition</td>
+                    <td style="padding:6px 0;"><code>{{ rule.operator }} {{ rule.threshold }}</code></td>
+                </tr>
+                {% if decoded.observedValue is defined %}
+                    <tr>
+                        <td style="padding:6px 0; color:#5f6b7a;">Observed</td>
+                        <td style="padding:6px 0;">{{ decoded.observedValue }}{{ decoded.unit ?? '' }}</td>
+                    </tr>
+                {% endif %}
+                <tr>
+                    <td style="padding:6px 0; color:#5f6b7a;">{{ ctx.event == 'resolved' ? 'Resolved at' : 'Fired at' }}</td>
+                    <td style="padding:6px 0;">{{ ctx.event == 'resolved' ? alert.resolvedAt : alert.createdAt }}</td>
+                </tr>
+            </table>
+
+            <div style="margin-top:24px;">
+                <a href="{{ ctx.alertUrl }}" style="display:inline-block; background:{{ color }}; color:#ffffff; text-decoration:none; padding:10px 18px; border-radius:6px; font-weight:600; font-size:14px;">Open Control Tower</a>
+            </div>
+        </div>
+        <div style="background:#f4f5f7; padding:12px 24px; font-size:11px; color:#5f6b7a;">
+            Sent by Control Tower because rule “{{ rule.name }}” {{ ctx.event }}.
+        </div>
+    </div>
+</body>
+</html>

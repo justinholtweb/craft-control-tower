@@ -16,7 +16,12 @@ class DashboardController extends Controller
         }
 
         $this->requireCpRequest();
-        $this->requirePermission('accessPlugin-control-tower');
+
+        if ($action->id === 'plugin-settings') {
+            $this->requirePermission(Plugin::PERMISSION_MANAGE_SETTINGS);
+        } else {
+            $this->requirePermission(Plugin::PERMISSION_VIEW);
+        }
 
         return true;
     }

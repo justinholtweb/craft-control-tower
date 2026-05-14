@@ -1,0 +1,53 @@
+{% extends 'control-tower/_cp/_layout' %}
+
+{% block dashboard %}
+    <div class="ct-panel">
+        <div class="ct-panel__header" style="display:flex; align-items:center; justify-content:space-between;">
+            <h3 class="ct-panel__title">Webhooks</h3>
+            <a href="{{ cpUrl('control-tower/webhooks/new') }}" class="btn submit add icon">New webhook</a>
+        </div>
+        <div class="ct-panel__body ct-panel__body--flush">
+            <table class="ct-table data fullwidth">
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Type</th>
+                        <th>URL</th>
+                        <th>Status</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for w in webhooks %}
+                        <tr>
+                            <td>
+                                <a href="{{ cpUrl('control-tower/webhooks/' ~ w.id) }}">
+                                    <strong>{{ w.name }}</strong>
+                                </a>
+                            </td>
+                            <td>{{ types[w.type] ?? w.type }}</td>
+                            <td><code>{{ w.maskedUrl() }}</code></td>
+                            <td>
+                                {% if w.isEnabled %}
+                                    <span class="status green"></span> Enabled
+                                {% else %}
+                                    <span class="status"></span> Disabled
+                                {% endif %}
+                            </td>
+                            <td class="thin">
+                                <form method="post" style="display:inline;">
+                                    {{ csrfInput() }}
+                                    {{ hiddenInput('action', 'control-tower/webhooks/delete') }}
+                                    {{ hiddenInput('id', w.id) }}
+                                    <button type="submit" class="btn small delete icon" data-confirm="Delete this webhook? Any rules pointing at it will lose this channel.">Delete</button>
+                                </form>
+                            </td>
+                        </tr>
+                    {% else %}
+                        <tr><td colspan="5" class="ct-empty">No webhooks yet. <a href="{{ cpUrl('control-tower/webhooks/new') }}">Add one</a>.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+{% endblock %}

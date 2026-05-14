@@ -7,34 +7,45 @@ use craft\base\Model;
 use craft\base\Plugin as BasePlugin;
 use craft\events\RegisterComponentTypesEvent;
 use craft\events\RegisterUrlRulesEvent;
+use craft\events\RegisterUserPermissionsEvent;
 use craft\services\Dashboard;
-use craft\services\Utilities;
+use craft\services\UserPermissions;
 use craft\web\UrlManager;
 use justinholtweb\controltower\models\Settings;
+use justinholtweb\controltower\services\AlertNotifierService;
 use justinholtweb\controltower\services\AlertService;
 use justinholtweb\controltower\services\ContentHealthService;
 use justinholtweb\controltower\services\EditorTrackingService;
+use justinholtweb\controltower\services\MetricRegistryService;
 use justinholtweb\controltower\services\MetricsCollectorService;
 use justinholtweb\controltower\services\QueueMonitorService;
 use justinholtweb\controltower\services\VisitorTrackingService;
+use justinholtweb\controltower\services\WebhookService;
 use justinholtweb\controltower\widgets\ControlTowerWidget;
 use yii\base\Event;
 
 /**
  * Control Tower — live operational monitoring for Craft CMS.
  *
+ * @property-read AlertNotifierService $alertNotifier
  * @property-read AlertService $alerts
  * @property-read ContentHealthService $contentHealth
  * @property-read EditorTrackingService $editorTracking
+ * @property-read MetricRegistryService $metricRegistry
  * @property-read MetricsCollectorService $metricsCollector
  * @property-read QueueMonitorService $queueMonitor
  * @property-read VisitorTrackingService $visitorTracking
+ * @property-read WebhookService $webhooks
  */
 class Plugin extends BasePlugin
 {
     public const EDITION_STANDARD = 'standard';
 
-    public string $schemaVersion = '1.0.0';
+    public const PERMISSION_VIEW = 'controltower:viewDashboard';
+    public const PERMISSION_MANAGE_ALERTS = 'controltower:manageAlerts';
+    public const PERMISSION_MANAGE_SETTINGS = 'controltower:manageSettings';
+
+    public string $schemaVersion = '1.1.0';
     public bool $hasCpSection = true;
     public bool $hasCpSettings = true;
 
@@ -49,12 +60,15 @@ class Plugin extends BasePlugin
     {
         return [
             'components' => [
+                'alertNotifier' => AlertNotifierService::class,
                 'alerts' => AlertService::class,
                 'contentHealth' => ContentHealthService::class,
                 'editorTracking' => EditorTrackingService::class,
+                'metricRegistry' => MetricRegistryService::class,
                 'metricsCollector' => MetricsCollectorService::class,
                 'queueMonitor' => QueueMonitorService::class,
                 'visitorTracking' => VisitorTrackingService::class,
+                'webhooks' => WebhookService::class,
             ],
         ];
     }
@@ -63,12 +77,7 @@ class Plugin extends BasePlugin
     {
         parent::init();
 
-        // Defer event registration until Craft is fully initialized
         Craft::$app->onInit(function () {
-            // Skip everything that touches our tables until install has finished.
-            // Otherwise the plugin store install request itself errors out because
-            // Plugin::init() runs (and onInit fires immediately) before the
-            // Install migration creates the tables we query.
             if (!$this->isInstalled) {
                 return;
             }
@@ -89,16 +98,31 @@ class Plugin extends BasePlugin
     {
         $nav = parent::getCpNavItem();
         $nav['label'] = 'Control Tower';
-        $nav['subnav'] = [
-            'overview' => ['label' => 'Overview', 'url' => 'control-tower'],
-            'visitors' => ['label' => 'Live Traffic', 'url' => 'control-tower/visitors'],
-            'editors' => ['label' => 'Editors', 'url' => 'control-tower/editors'],
-            'content' => ['label' => 'Content Health', 'url' => 'control-tower/content'],
-            'queue' => ['label' => 'Queue Watch', 'url' => 'control-tower/queue'],
-            'system' => ['label' => 'System Pulse', 'url' => 'control-tower/system'],
-            'alerts' => ['label' => 'Alerts', 'url' => 'control-tower/alerts'],
-            'settings' => ['label' => 'Settings', 'url' => 'control-tower/settings'],
-        ];
+
+        $user = Craft::$app->getUser();
+        $canView = $user->checkPermission(self::PERMISSION_VIEW);
+        $canManageAlerts = $user->checkPermission(self::PERMISSION_MANAGE_ALERTS);
+        $canManageSettings = $user->checkPermission(self::PERMISSION_MANAGE_SETTINGS);
+
+        $subnav = [];
+        if ($canView) {
+            $subnav['overview'] = ['label' => 'Overview', 'url' => 'control-tower'];
+            $subnav['visitors'] = ['label' => 'Live Traffic', 'url' => 'control-tower/visitors'];
+            $subnav['editors'] = ['label' => 'Editors', 'url' => 'control-tower/editors'];
+            $subnav['content'] = ['label' => 'Content Health', 'url' => 'control-tower/content'];
+            $subnav['queue'] = ['label' => 'Queue Watch', 'url' => 'control-tower/queue'];
+            $subnav['system'] = ['label' => 'System Pulse', 'url' => 'control-tower/system'];
+            $subnav['alerts'] = ['label' => 'Alerts', 'url' => 'control-tower/alerts'];
+        }
+        if ($canManageAlerts) {
+            $subnav['rules'] = ['label' => 'Alert Rules', 'url' => 'control-tower/rules'];
+            $subnav['webhooks'] = ['label' => 'Webhooks', 'url' => 'control-tower/webhooks'];
+        }
+        if ($canManageSettings) {
+            $subnav['settings'] = ['label' => 'Settings', 'url' => 'control-tower/settings'];
+        }
+
+        $nav['subnav'] = $subnav;
 
         return $nav;
     }
@@ -140,6 +164,16 @@ class Plugin extends BasePlugin
                 $event->rules['control-tower/alerts'] = 'control-tower/dashboard/alerts';
                 $event->rules['control-tower/settings'] = 'control-tower/dashboard/plugin-settings';
 
+                // Rules
+                $event->rules['control-tower/rules'] = 'control-tower/rules/index';
+                $event->rules['control-tower/rules/new'] = 'control-tower/rules/edit';
+                $event->rules['control-tower/rules/<id:\d+>'] = 'control-tower/rules/edit';
+
+                // Webhooks
+                $event->rules['control-tower/webhooks'] = 'control-tower/webhooks/index';
+                $event->rules['control-tower/webhooks/new'] = 'control-tower/webhooks/edit';
+                $event->rules['control-tower/webhooks/<id:\d+>'] = 'control-tower/webhooks/edit';
+
                 // JSON API endpoints
                 $event->rules['control-tower/api/overview'] = 'control-tower/api/overview';
                 $event->rules['control-tower/api/visitors'] = 'control-tower/api/visitors';
@@ -149,6 +183,28 @@ class Plugin extends BasePlugin
                 $event->rules['control-tower/api/system'] = 'control-tower/api/system';
                 $event->rules['control-tower/api/alerts'] = 'control-tower/api/alerts';
                 $event->rules['control-tower/api/widget'] = 'control-tower/api/widget';
+            }
+        );
+
+        // Register user permissions
+        Event::on(
+            UserPermissions::class,
+            UserPermissions::EVENT_REGISTER_PERMISSIONS,
+            function (RegisterUserPermissionsEvent $event) {
+                $event->permissions[] = [
+                    'heading' => 'Control Tower',
+                    'permissions' => [
+                        self::PERMISSION_VIEW => [
+                            'label' => 'View Control Tower dashboards',
+                        ],
+                        self::PERMISSION_MANAGE_ALERTS => [
+                            'label' => 'Manage alert rules and webhooks',
+                        ],
+                        self::PERMISSION_MANAGE_SETTINGS => [
+                            'label' => 'Edit Control Tower settings',
+                        ],
+                    ],
+                ];
             }
         );
 

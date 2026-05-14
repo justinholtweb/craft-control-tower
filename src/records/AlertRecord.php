@@ -6,6 +6,7 @@ use craft\db\ActiveRecord;
 
 /**
  * @property int $id
+ * @property int|null $alertRuleId
  * @property string $type
  * @property string $severity
  * @property string $message

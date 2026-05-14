@@ -16,7 +16,7 @@ class ApiController extends Controller
 
         $this->requireCpRequest();
         $this->requireAcceptsJson();
-        $this->requirePermission('accessPlugin-control-tower');
+        $this->requirePermission(Plugin::PERMISSION_VIEW);
 
         return true;
     }
