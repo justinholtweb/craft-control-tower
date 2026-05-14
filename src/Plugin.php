@@ -65,6 +65,14 @@ class Plugin extends BasePlugin
 
         // Defer event registration until Craft is fully initialized
         Craft::$app->onInit(function () {
+            // Skip everything that touches our tables until install has finished.
+            // Otherwise the plugin store install request itself errors out because
+            // Plugin::init() runs (and onInit fires immediately) before the
+            // Install migration creates the tables we query.
+            if (!$this->isInstalled) {
+                return;
+            }
+
             $this->_registerEventHandlers();
 
             if (Craft::$app->getRequest()->getIsCpRequest()) {

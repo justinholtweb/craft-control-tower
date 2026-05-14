@@ -2,7 +2,7 @@
     "name": "justinholtweb/craft-controltower",
     "description": "Live operational monitoring dashboard for Craft CMS — site activity, editor tracking, content health, queue watch, and system metrics at a glance.",
     "type": "craft-plugin",
-    "version": "5.0.0",
+    "version": "5.0.1",
     "license": "proprietary",
     "minimum-stability": "dev",
     "prefer-stable": true,
@@ -20,7 +20,7 @@
         "name": "Control Tower",
         "developer": "Justin Holt",
         "developerUrl": "https://justinholt.com",
-        "documentationUrl": "https://github.com/justinholtweb/craft-controltower",
+        "documentationUrl": "https://craft-controltower.com/docs",
         "class": "justinholtweb\\controltower\\Plugin",
         "hasCpSection": true,
         "hasCpSettings": true
