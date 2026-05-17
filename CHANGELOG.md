@@ -1,5 +1,10 @@
 # Release Notes for Control Tower
 
+## 5.1.1 - 2026-05-17
+
+### Fixed
+- Republish 5.1.0 under a corrected tag so Packagist accepts it. The 5.1.0 tag was placed on a commit whose `composer.json` still read `5.0.2`, causing Packagist to skip it.
+
 ## 5.1.0 - 2026-05-14
 
 ### Added
