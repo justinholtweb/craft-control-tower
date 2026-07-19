@@ -9,9 +9,12 @@ Live operational monitoring dashboard for Craft CMS 5. Know what's happening on 
 - **Content Health** — Entries by section, stale content detection, scheduled/expired entries, drafts awaiting attention, asset volume summaries
 - **Queue Watch** — Waiting/running/failed jobs, common failure patterns, queue health status
 - **System Pulse** — CPU, memory, disk, load average, DB response time, PHP info, uptime
-- **Alerts** — Automatic warnings for queue failures, editor collisions, server resource spikes
+- **Configurable Alert Rules** — Build alerts in the CP, no config files. Each rule has a metric, operator, threshold, severity, and enable toggle. Queue failures, editor collisions, and server resource spikes ship as default rules — edit, disable, or add your own. Extensible metric registry covers queue depth, CPU / memory / disk %, collisions, active editor count, and stale content.
+- **Webhook & Email Notifications** — Send alerts to Slack, Microsoft Teams (Power Automate / Adaptive Cards), Zapier, or any JSON receiver. Per-rule email recipients with admin-notify toggle. A **Send Test** button verifies delivery before you ship the rule. Flap throttling (`minNotifyInterval`) suppresses noisy repeats, and "notify on resolve" closes the loop. Notifications dispatch asynchronously via a queue job so SMTP / webhook latency never blocks a request.
+- **Granular Permissions** — Three CP permissions (`viewDashboard`, `manageAlerts`, `manageSettings`) so editors and ops staff get scoped access without full admin rights.
+- **Overrideable Email Template** — Drop a `templates/_cp/_emails/alert.twig` into your project to fully customize alert emails.
 - **Dashboard Widget** — Configurable at-a-glance summary card with auto-refresh
-- **Full CP Section** — Seven-tab deep dive (Overview, Live Traffic, Editors, Content Health, Queue Watch, System Pulse, Alerts)
+- **Full CP Section** — Seven-tab deep dive (Overview, Live Traffic, Editors, Content Health, Queue Watch, System Pulse, Alerts) plus Alerts → Rules and Webhooks management screens
 
 ## Requirements
 
@@ -153,7 +156,7 @@ templates/              → CP section (7 tabs) + widget
 
 **v1.5** — Trend charts (15m / 1h / 24h / 7d), per-section content health, 404 and error rate trends, configurable alert thresholds
 
-**v2** — Slack/email alert notifications, deployment awareness (git SHA, last deploy, environment), cache metrics, database slow query panel, multi-site comparisons
+**v2** — Deployment awareness (git SHA, last deploy, environment), cache metrics, database slow query panel, multi-site comparisons
 
 ## License
 

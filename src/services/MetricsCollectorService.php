@@ -25,6 +25,7 @@ class MetricsCollectorService extends Component
 
     public function getLatestSample(): ?array
     {
+        /** @var MetricSampleRecord|null $record */
         $record = MetricSampleRecord::find()
             ->orderBy(['sampledAt' => SORT_DESC])
             ->one();
@@ -124,7 +125,8 @@ class MetricsCollectorService extends Component
     {
         if (PHP_OS_FAMILY === 'Linux' && is_readable('/proc/meminfo')) {
             $meminfo = file_get_contents('/proc/meminfo');
-            if (preg_match('/MemTotal:\s+(\d+)/', $meminfo, $total) &&
+            if ($meminfo !== false &&
+                preg_match('/MemTotal:\s+(\d+)/', $meminfo, $total) &&
                 preg_match('/MemAvailable:\s+(\d+)/', $meminfo, $available)) {
                 $totalKb = (int) $total[1];
                 $availableKb = (int) $available[1];
@@ -242,7 +244,9 @@ class MetricsCollectorService extends Component
     {
         if (PHP_OS_FAMILY === 'Linux' && is_readable('/proc/cpuinfo')) {
             $cpuinfo = file_get_contents('/proc/cpuinfo');
-            return max(1, substr_count($cpuinfo, 'processor'));
+            if ($cpuinfo !== false) {
+                return max(1, substr_count($cpuinfo, 'processor'));
+            }
         }
 
         if (PHP_OS_FAMILY === 'Darwin') {

@@ -132,6 +132,14 @@ class Plugin extends BasePlugin
         return new Settings();
     }
 
+    public function getSettings(): Settings
+    {
+        /** @var Settings $settings */
+        $settings = parent::getSettings();
+
+        return $settings;
+    }
+
     protected function settingsHtml(): ?string
     {
         return Craft::$app->getView()->renderTemplate('control-tower/_cp/_settings_fields', [
@@ -265,7 +273,7 @@ class Plugin extends BasePlugin
 
         $request = Craft::$app->getRequest();
         $this->editorTracking->recordActivity(
-            $user->id,
+            (int) $user->id,
             $request->getPathInfo(),
             $request->getUrl(),
         );

@@ -1,5 +1,15 @@
 # Release Notes for Control Tower
 
+## 5.1.2 - 2026-07-19
+
+### Fixed
+- Alert `context` and rule `webhookIds` are no longer stored as the literal `false` when `json_encode()` fails; they now fall back to `null`.
+- Server metric collection no longer passes a `false` file-read result into `preg_match()`/`substr_count()` when `/proc/meminfo` or `/proc/cpuinfo` can't be read, so CPU/memory sampling degrades gracefully instead of misreporting.
+- Content events now cast the current user id to an integer before storing, avoiding a type mismatch on the `userId` column.
+
+### Added
+- PHPStan static analysis is wired up for the plugin (`craftcms/phpstan` dev dependency, `phpstan.neon` at level 5, and a `composer phpstan` script). The `src/` tree passes cleanly.
+
 ## 5.1.1 - 2026-05-17
 
 ### Fixed

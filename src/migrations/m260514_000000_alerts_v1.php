@@ -20,9 +20,10 @@ class m260514_000000_alerts_v1 extends Migration
 
     public function safeDown(): bool
     {
-        if ($this->db->getSchema()->getTableSchema('{{%controltower_alerts}}', true) !== null) {
+        $alertsSchema = $this->db->getSchema()->getTableSchema('{{%controltower_alerts}}', true);
+        if ($alertsSchema !== null) {
             // Best-effort: drop FK before dropping column.
-            $fks = $this->db->getSchema()->getTableSchema('{{%controltower_alerts}}', true)->foreignKeys ?? [];
+            $fks = $alertsSchema->foreignKeys;
             foreach ($fks as $name => $fk) {
                 if (isset($fk['alertRuleId'])) {
                     $this->dropForeignKey($name, '{{%controltower_alerts}}');

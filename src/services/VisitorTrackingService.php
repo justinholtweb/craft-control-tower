@@ -21,6 +21,7 @@ class VisitorTrackingService extends Component
         $now = Db::prepareDateForDb(new \DateTime());
 
         // Upsert: update lastSeenAt if same session, else insert
+        /** @var VisitorRecord|null $existing */
         $existing = VisitorRecord::find()
             ->where(['sessionHash' => $sessionHash])
             ->andWhere(['>=', 'lastSeenAt', Db::prepareDateForDb(new \DateTime('-5 minutes'))])

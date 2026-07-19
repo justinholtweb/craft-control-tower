@@ -37,6 +37,7 @@ class EditorTrackingService extends Component
     {
         $since = Db::prepareDateForDb(new \DateTime("-{$withinMinutes} minutes"));
 
+        /** @var EditorSessionRecord[] $sessions */
         $sessions = EditorSessionRecord::find()
             ->where(['>=', 'lastSeenAt', $since])
             ->orderBy(['lastSeenAt' => SORT_DESC])
@@ -153,6 +154,7 @@ class EditorTrackingService extends Component
         $settings = Plugin::getInstance()->getSettings();
         $since = Db::prepareDateForDb(new \DateTime("-{$settings->editorTimeout} minutes"));
 
+        /** @var EditorSessionRecord|null $session */
         $session = EditorSessionRecord::find()
             ->where(['userId' => $userId])
             ->andWhere(['>=', 'lastSeenAt', $since])

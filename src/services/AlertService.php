@@ -28,6 +28,7 @@ class AlertService extends Component
         if ($enabledOnly === true) {
             $query->where(['isEnabled' => true]);
         }
+        /** @var AlertRuleRecord[] $records */
         $records = $query->orderBy(['severity' => SORT_ASC, 'name' => SORT_ASC])->all();
 
         return array_map(fn($r) => $this->_recordToRule($r), $records);
@@ -59,7 +60,7 @@ class AlertService extends Component
         $record->isEnabled = $rule->isEnabled;
         $record->notifyAdmins = $rule->notifyAdmins;
         $record->notifyEmails = $rule->notifyEmails;
-        $record->webhookIds = !empty($rule->webhookIds) ? json_encode(array_values(array_map('intval', $rule->webhookIds))) : null;
+        $record->webhookIds = !empty($rule->webhookIds) ? (json_encode(array_values(array_map('intval', $rule->webhookIds))) ?: null) : null;
         $record->notifyOnResolve = $rule->notifyOnResolve;
         $record->minNotifyInterval = $rule->minNotifyInterval;
 
@@ -113,7 +114,7 @@ class AlertService extends Component
         if ($existing) {
             $existing->message = $message;
             $existing->severity = $severity;
-            $existing->context = $context ? json_encode($context) : null;
+            $existing->context = $context ? (json_encode($context) ?: null) : null;
             $existing->save(false);
             return;
         }
@@ -123,7 +124,7 @@ class AlertService extends Component
         $record->type = $type;
         $record->severity = $severity;
         $record->message = $message;
-        $record->context = $context ? json_encode($context) : null;
+        $record->context = $context ? (json_encode($context) ?: null) : null;
         $record->isActive = true;
         $record->createdAt = Db::prepareDateForDb(new \DateTime());
         $record->save(false);
@@ -154,10 +155,13 @@ class AlertService extends Component
 
     public function getActiveAlerts(): array
     {
-        return array_map(fn($r) => $this->_alertToArray($r), AlertRecord::find()
+        /** @var AlertRecord[] $records */
+        $records = AlertRecord::find()
             ->where(['isActive' => true])
             ->orderBy(['severity' => SORT_ASC, 'createdAt' => SORT_DESC])
-            ->all());
+            ->all();
+
+        return array_map(fn($r) => $this->_alertToArray($r), $records);
     }
 
     public function getActiveAlertCount(): int
@@ -167,10 +171,13 @@ class AlertService extends Component
 
     public function getAlertHistory(int $limit = 50): array
     {
-        return array_map(fn($r) => $this->_alertToArray($r, includeResolved: true), AlertRecord::find()
+        /** @var AlertRecord[] $records */
+        $records = AlertRecord::find()
             ->orderBy(['createdAt' => SORT_DESC])
             ->limit($limit)
-            ->all());
+            ->all();
+
+        return array_map(fn($r) => $this->_alertToArray($r, includeResolved: true), $records);
     }
 
     // ----- Checks -----
@@ -243,7 +250,11 @@ class AlertService extends Component
         } else {
             $q->andWhere(['type' => $type]);
         }
-        return $q->one();
+
+        /** @var AlertRecord|null $record */
+        $record = $q->one();
+
+        return $record;
     }
 
     private function _pushNotification(int $alertId, string $event): void

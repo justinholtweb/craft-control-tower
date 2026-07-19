@@ -21,7 +21,8 @@ class ContentHealthService extends Component
         $record->elementId = $elementId;
         $record->action = $action;
         $record->sectionHandle = $sectionHandle;
-        $record->userId = Craft::$app->getUser()->getId();
+        $userId = Craft::$app->getUser()->getId();
+        $record->userId = $userId !== null ? (int) $userId : null;
         $record->recordedAt = Db::prepareDateForDb(new \DateTime());
         $record->save(false);
     }
@@ -149,6 +150,9 @@ class ContentHealthService extends Component
             $query->andWhere(['>=', 'recordedAt', Db::prepareDateForDb($since)]);
         }
 
+        /** @var ContentEventRecord[] $records */
+        $records = $query->all();
+
         return array_map(fn($record) => [
             'elementType' => $record->elementType,
             'elementId' => $record->elementId,
@@ -156,7 +160,7 @@ class ContentHealthService extends Component
             'sectionHandle' => $record->sectionHandle,
             'userId' => $record->userId,
             'recordedAt' => $record->recordedAt,
-        ], $query->all());
+        ], $records);
     }
 
     public function getContentPipeline(): array

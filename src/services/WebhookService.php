@@ -13,6 +13,7 @@ class WebhookService extends Component
      */
     public function all(): array
     {
+        /** @var WebhookRecord[] $records */
         $records = WebhookRecord::find()->orderBy(['name' => SORT_ASC])->all();
         return array_map(fn($r) => $this->_recordToModel($r), $records);
     }
@@ -32,6 +33,7 @@ class WebhookService extends Component
         if (empty($ids)) {
             return [];
         }
+        /** @var WebhookRecord[] $records */
         $records = WebhookRecord::find()
             ->where(['id' => $ids, 'isEnabled' => true])
             ->all();
