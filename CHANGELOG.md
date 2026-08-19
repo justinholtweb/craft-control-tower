@@ -1,5 +1,22 @@
 # Release Notes for Control Tower
 
+## 5.1.3 - 2026-08-19
+
+### Fixed
+- **Plugin settings are saved again.** Every field in the settings screen was named
+  `settings[…]`, but both screens that render those fields already apply the `settings`
+  namespace themselves — so the values posted as `settings[settings][…]` and Craft's
+  `plugins/save-plugin-settings` action ignored them. The screen reported "Plugin settings
+  saved" and discarded every edit. Fields are now emitted bare, and Control Tower's own
+  Settings tab wraps them in `{% namespace 'settings' %}` to match the Settings → Plugins
+  screen, which Craft namespaces for it.
+
+### Note on 5.1.2
+- The `5.1.2` tag was originally published against the 5.1.1 commit, so the fixes listed
+  under 5.1.2 below never actually reached anyone. The tag has been corrected, and 5.1.3
+  contains that work regardless — if you are coming from 5.1.1 or earlier, upgrading to
+  5.1.3 picks up both releases.
+
 ## 5.1.2 - 2026-07-19
 
 ### Fixed

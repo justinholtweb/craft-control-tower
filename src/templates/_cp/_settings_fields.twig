@@ -1,3 +1,11 @@
+{# Field names here are bare — no `settings[…]` prefix. Both consumers of this partial
+   apply that namespace themselves: `craft\base\Plugin::settingsResponse()` wraps the
+   Settings → Plugins screen in `View::namespaceInputs(…, 'settings')`, and
+   `_cp/settings.twig` wraps its include in `{% namespace 'settings' %}`.
+
+   Writing `settings[foo]` here posts as `settings[settings][foo]`, which Craft's
+   save-plugin-settings action ignores entirely — the screen looks perfect, Craft reports
+   "Plugin settings saved", and every edit is silently discarded. #}
 {% import '_includes/forms.twig' as forms %}
 
 <h2>Tracking</h2>
@@ -6,7 +14,7 @@
     label: 'Track Visitors',
     instructions: 'Enable front-end visitor tracking via request logging.',
     id: 'trackVisitors',
-    name: 'settings[trackVisitors]',
+    name: 'trackVisitors',
     on: settings.trackVisitors,
 }) }}
 
@@ -14,7 +22,7 @@
     label: 'Track Editors',
     instructions: 'Track CP user activity (routes, element editing).',
     id: 'trackEditors',
-    name: 'settings[trackEditors]',
+    name: 'trackEditors',
     on: settings.trackEditors,
 }) }}
 
@@ -22,7 +30,7 @@
     label: 'Track Server Metrics',
     instructions: 'Periodically sample CPU, memory, disk, and DB metrics.',
     id: 'trackServerMetrics',
-    name: 'settings[trackServerMetrics]',
+    name: 'trackServerMetrics',
     on: settings.trackServerMetrics,
 }) }}
 
@@ -35,7 +43,7 @@
     label: 'Widget Refresh Interval',
     instructions: 'How often the dashboard auto-refreshes (seconds).',
     id: 'refreshInterval',
-    name: 'settings[refreshInterval]',
+    name: 'refreshInterval',
     value: settings.refreshInterval,
     type: 'number',
     min: 5,
@@ -46,7 +54,7 @@
     label: 'Visitor Timeout',
     instructions: 'Minutes before a visitor is considered inactive.',
     id: 'visitorTimeout',
-    name: 'settings[visitorTimeout]',
+    name: 'visitorTimeout',
     value: settings.visitorTimeout,
     type: 'number',
     min: 1,
@@ -57,7 +65,7 @@
     label: 'Editor Timeout',
     instructions: 'Minutes before an editor session is considered inactive.',
     id: 'editorTimeout',
-    name: 'settings[editorTimeout]',
+    name: 'editorTimeout',
     value: settings.editorTimeout,
     type: 'number',
     min: 1,
@@ -71,7 +79,7 @@
     label: 'Visitor Data Retention',
     instructions: 'Days to keep visitor tracking data.',
     id: 'visitorRetentionDays',
-    name: 'settings[visitorRetentionDays]',
+    name: 'visitorRetentionDays',
     value: settings.visitorRetentionDays,
     type: 'number',
     min: 1,
@@ -82,7 +90,7 @@
     label: 'Editor Data Retention',
     instructions: 'Days to keep editor activity data.',
     id: 'editorRetentionDays',
-    name: 'settings[editorRetentionDays]',
+    name: 'editorRetentionDays',
     value: settings.editorRetentionDays,
     type: 'number',
     min: 1,
@@ -93,7 +101,7 @@
     label: 'Content Event Retention',
     instructions: 'Days to keep content event records.',
     id: 'contentEventRetentionDays',
-    name: 'settings[contentEventRetentionDays]',
+    name: 'contentEventRetentionDays',
     value: settings.contentEventRetentionDays,
     type: 'number',
     min: 1,
@@ -104,7 +112,7 @@
     label: 'Metric Sample Retention',
     instructions: 'Days to keep server metric samples.',
     id: 'metricRetentionDays',
-    name: 'settings[metricRetentionDays]',
+    name: 'metricRetentionDays',
     value: settings.metricRetentionDays,
     type: 'number',
     min: 1,
@@ -115,7 +123,7 @@
     label: 'Alert Retention',
     instructions: 'Days to keep resolved alert records.',
     id: 'alertRetentionDays',
-    name: 'settings[alertRetentionDays]',
+    name: 'alertRetentionDays',
     value: settings.alertRetentionDays,
     type: 'number',
     min: 1,
@@ -129,7 +137,7 @@
     label: 'Stale Content Threshold',
     instructions: 'Days without update before content is flagged as stale.',
     id: 'staleContentDays',
-    name: 'settings[staleContentDays]',
+    name: 'staleContentDays',
     value: settings.staleContentDays,
     type: 'number',
     min: 1,

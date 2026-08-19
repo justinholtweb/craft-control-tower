@@ -6,7 +6,12 @@
         {{ actionInput('plugins/save-plugin-settings') }}
         {{ hiddenInput('pluginHandle', 'control-tower') }}
 
-        {% include 'control-tower/_cp/_settings_fields' %}
+        {# Craft's plugins/save-plugin-settings action reads the `settings` body param.
+           The Settings → Plugins screen gets that namespace applied for free by
+           `craft\base\Plugin::settingsResponse()`; this page has to apply it itself. #}
+        {% namespace 'settings' %}
+            {% include 'control-tower/_cp/_settings_fields' %}
+        {% endnamespace %}
 
         <hr>
 
