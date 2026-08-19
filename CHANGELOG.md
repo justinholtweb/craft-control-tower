@@ -1,6 +1,6 @@
 # Release Notes for Control Tower
 
-## Unreleased
+## 5.1.4 - 2026-08-19
 
 ### Added
 - **Craftnet license validation.** Control Tower now checks its license key status through Craft's built-in Craftnet integration and gates itself when the install isn't licensed. Enforcement is strict: only `valid` and `trial` unlock the plugin.
