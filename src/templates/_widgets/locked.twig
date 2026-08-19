@@ -1,0 +1,7 @@
+<div class="ct-empty">
+    <p><strong>Control Tower is locked.</strong></p>
+    <p>{{ message }}</p>
+    {% if currentUser.can('controltower:manageSettings') or currentUser.admin %}
+        <p><a class="btn small" href="{{ cpUrl('control-tower/license') }}">Manage license</a></p>
+    {% endif %}
+</div>

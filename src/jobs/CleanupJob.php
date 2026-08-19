@@ -18,6 +18,11 @@ class CleanupJob extends BaseJob
         return 'Control Tower: data retention cleanup';
     }
 
+    /**
+     * Runs regardless of license status: retention is an obligation to the site
+     * owner, not a feature to withhold. A locked install stops collecting, so
+     * this only ever drains what's already there.
+     */
     public function execute($queue): void
     {
         $plugin = Plugin::getInstance();

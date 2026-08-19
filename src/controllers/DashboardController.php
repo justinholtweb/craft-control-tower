@@ -9,6 +9,8 @@ use justinholtweb\controltower\assets\ControlTowerCpAsset;
 
 class DashboardController extends Controller
 {
+    use LicenseGateTrait;
+
     public function beforeAction($action): bool
     {
         if (!parent::beforeAction($action)) {
@@ -23,7 +25,7 @@ class DashboardController extends Controller
             $this->requirePermission(Plugin::PERMISSION_VIEW);
         }
 
-        return true;
+        return $this->enforceLicense();
     }
 
     public function actionOverview(): \yii\web\Response

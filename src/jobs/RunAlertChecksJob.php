@@ -20,6 +20,12 @@ class RunAlertChecksJob extends BaseJob
 
     public function execute($queue): void
     {
-        Plugin::getInstance()->alerts->runChecks();
+        $plugin = Plugin::getInstance();
+
+        if (!$plugin->license->getIsValid()) {
+            return;
+        }
+
+        $plugin->alerts->runChecks();
     }
 }

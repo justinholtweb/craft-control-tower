@@ -57,6 +57,20 @@ class Settings extends Model
     /** Alert on 404 spike per minute threshold */
     public int $notFoundAlertThreshold = 50;
 
+    /**
+     * Bypass Craftnet license validation entirely.
+     *
+     * Deliberately absent from the settings screen — set it in
+     * `config/control-tower.php` so it lives in version control and can't be
+     * flipped from the CP:
+     *
+     *     return ['disableLicenseEnforcement' => true];
+     *
+     * Intended for CI, and for staging environments Craft doesn't recognise as
+     * testable domains.
+     */
+    public bool $disableLicenseEnforcement = false;
+
     public function defineRules(): array
     {
         return [

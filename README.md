@@ -158,6 +158,72 @@ templates/              → CP section (7 tabs) + widget
 
 **v2** — Deployment awareness (git SHA, last deploy, environment), cache metrics, database slow query panel, multi-site comparisons
 
+## Licensing
+
+Control Tower validates its license key through Craft's built-in Craftnet
+integration. Craft refreshes the status out-of-band during its own update
+checks, so no request is made on your site's behalf at runtime.
+
+Enforcement is strict — the plugin unlocks only on a `valid` or `trial` status:
+
+| Status | Result |
+| --- | --- |
+| `valid` | Unlocked |
+| `trial` | Unlocked, with a banner in the CP |
+| `unknown` | **Locked** — no key entered, or Craft hasn't reached Craftnet yet |
+| `invalid` / `mismatched` | **Locked** |
+| `astray` | **Locked** — the installed version is past what the license covers |
+
+### Expired licenses
+
+An expired license does **not** lock the plugin. Control Tower licenses are
+perpetual for every version released before they expire, so an install that
+lapses its renewal and stays put keeps reporting `valid` and keeps working
+indefinitely. Renewal only matters if you want versions released after the
+expiry date.
+
+The gate trips only when an install updates *past* the last version its license
+covers — that's the `astray` status. Craftnet performs that version comparison
+itself, so the plugin never second-guesses it. From `astray`, both remedies are
+legitimate: renew to cover the newer version, or roll back to the last covered
+version and carry on without renewing. The license screen says exactly that.
+
+When locked, Control Tower:
+
+- redirects every CP page to **Control Tower → License**, and collapses its nav
+  to that one item;
+- returns `402` from its JSON endpoints;
+- shows a locked notice in place of the dashboard widget;
+- stops collecting visitor, editor, content, and metrics data, and stops running
+  alert checks and notifications.
+
+Existing data is never deleted, and retention cleanup keeps running. Everything
+reappears as soon as the license is valid again.
+
+Saving a license key re-checks it with Craftnet immediately, and admins can
+force a re-check any time with **Refresh status** on the license screen — so a
+correct key unlocks the install right away rather than waiting on Craft's next
+scheduled update check.
+
+### Development and staging environments
+
+Craft's `canTestEditions` flag (true on domains Craftnet recognises as local or
+dev) bypasses enforcement entirely, so local installs are never locked. That
+verdict is mirrored into the cache so queue workers and cron reach the same
+conclusion as the browser.
+
+For CI, or for staging domains Craft doesn't recognise as testable, switch
+enforcement off in `config/control-tower.php`:
+
+```php
+return [
+    'disableLicenseEnforcement' => true,
+];
+```
+
+This setting is deliberately absent from the settings screen — it belongs in
+version control, not in the CP.
+
 ## License
 
 See [LICENSE.md](LICENSE.md).

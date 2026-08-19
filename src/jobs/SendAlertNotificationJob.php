@@ -18,6 +18,12 @@ class SendAlertNotificationJob extends BaseJob
 
     public function execute($queue): void
     {
-        Plugin::getInstance()->alertNotifier->notify($this->alertId, $this->event);
+        $plugin = Plugin::getInstance();
+
+        if (!$plugin->license->getIsValid()) {
+            return;
+        }
+
+        $plugin->alertNotifier->notify($this->alertId, $this->event);
     }
 }

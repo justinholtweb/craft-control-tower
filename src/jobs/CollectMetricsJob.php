@@ -22,6 +22,10 @@ class CollectMetricsJob extends BaseJob
     {
         $plugin = Plugin::getInstance();
 
+        if (!$plugin->license->getIsValid()) {
+            return;
+        }
+
         if (!$plugin->getSettings()->trackServerMetrics) {
             return;
         }

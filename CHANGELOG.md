@@ -1,5 +1,22 @@
 # Release Notes for Control Tower
 
+## Unreleased
+
+### Added
+- **Craftnet license validation.** Control Tower now checks its license key status through Craft's built-in Craftnet integration and gates itself when the install isn't licensed. Enforcement is strict: only `valid` and `trial` unlock the plugin.
+- **License screen** at Control Tower → License, showing the current status, Craft's license issues, and a key field (admins only). This page is never gated — it's how a locked install gets unlocked.
+- `disableLicenseEnforcement` config setting for CI and unrecognised staging domains. Set it in `config/control-tower.php`; it is intentionally not exposed in the CP.
+- **Refresh status** button on the license screen, and an automatic re-check when a key is saved, so a valid key unlocks the install immediately instead of waiting for Craft's next scheduled update check.
+
+### Notes on expired licenses
+- An expired license does not lock the plugin. Licenses are perpetual for versions released before they expire, so an install that lapses its renewal and stays on its current version keeps reporting `valid` and keeps working. Only `astray` — installed version newer than the license covers — locks the plugin, and Craftnet determines that itself.
+- From `astray`, the license screen presents both remedies as equally valid: renew to cover the newer version, or downgrade to the last covered version and continue without renewing.
+
+### Changed
+- A locked install collapses its CP nav to the License item, redirects all Control Tower pages there, returns `402` from the JSON API, and renders a locked notice in the dashboard widget.
+- A locked install stops collecting visitor, editor, content, and metrics data, and stops running alert checks and notifications. Retention cleanup still runs, and no existing data is deleted.
+- Installs on domains Craft considers testable (local/dev) are never gated. The verdict is mirrored into the cache so console and queue requests agree with web requests.
+
 ## 5.1.3 - 2026-08-19
 
 ### Fixed

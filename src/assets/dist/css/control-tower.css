@@ -470,3 +470,72 @@
         grid-template-columns: 1fr;
     }
 }
+
+/* License banner + status */
+.ct-license-banner {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+    padding: 10px 14px;
+    margin-bottom: 16px;
+    border-radius: 6px;
+    font-size: 13px;
+    background: #fef9e7;
+    border: 1px solid #f2d98a;
+    color: #7a5b0b;
+}
+
+.ct-license-banner__label {
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    font-size: 11px;
+    font-weight: 700;
+    padding: 2px 7px;
+    border-radius: 3px;
+    background: #f2d98a;
+    color: #6b4f08;
+}
+
+.ct-license-banner__link {
+    margin-left: auto;
+    font-weight: 600;
+}
+
+.ct-license-status {
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    font-size: 11px;
+    font-weight: 700;
+    padding: 3px 9px;
+    border-radius: 3px;
+}
+
+.ct-license-status--ok {
+    background: #e3f7ec;
+    color: #1a7f4b;
+}
+
+.ct-license-status--warn {
+    background: #fef9e7;
+    color: #7a5b0b;
+}
+
+.ct-license-status--error {
+    background: #fdeaea;
+    color: #a11d1d;
+}
+
+.ct-license-issues {
+    margin: 10px 0 0;
+    padding-left: 18px;
+    font-size: 13px;
+    color: #a11d1d;
+}
+
+.ct-license-refresh {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: 14px;
+}

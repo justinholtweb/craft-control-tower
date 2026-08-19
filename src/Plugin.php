@@ -16,6 +16,7 @@ use justinholtweb\controltower\services\AlertNotifierService;
 use justinholtweb\controltower\services\AlertService;
 use justinholtweb\controltower\services\ContentHealthService;
 use justinholtweb\controltower\services\EditorTrackingService;
+use justinholtweb\controltower\services\LicenseService;
 use justinholtweb\controltower\services\MetricRegistryService;
 use justinholtweb\controltower\services\MetricsCollectorService;
 use justinholtweb\controltower\services\QueueMonitorService;
@@ -31,6 +32,7 @@ use yii\base\Event;
  * @property-read AlertService $alerts
  * @property-read ContentHealthService $contentHealth
  * @property-read EditorTrackingService $editorTracking
+ * @property-read LicenseService $license
  * @property-read MetricRegistryService $metricRegistry
  * @property-read MetricsCollectorService $metricsCollector
  * @property-read QueueMonitorService $queueMonitor
@@ -39,6 +41,8 @@ use yii\base\Event;
  */
 class Plugin extends BasePlugin
 {
+    public const HANDLE = 'control-tower';
+
     public const EDITION_STANDARD = 'standard';
 
     public const PERMISSION_VIEW = 'controltower:viewDashboard';
@@ -64,6 +68,7 @@ class Plugin extends BasePlugin
                 'alerts' => AlertService::class,
                 'contentHealth' => ContentHealthService::class,
                 'editorTracking' => EditorTrackingService::class,
+                'license' => LicenseService::class,
                 'metricRegistry' => MetricRegistryService::class,
                 'metricsCollector' => MetricsCollectorService::class,
                 'queueMonitor' => QueueMonitorService::class,
@@ -82,7 +87,18 @@ class Plugin extends BasePlugin
                 return;
             }
 
+            // Routes, permissions and the widget stay registered whatever the
+            // license status — an unlicensed install still needs to be able to
+            // reach the license screen and see why it's locked.
             $this->_registerEventHandlers();
+
+            // Data collection is licensed functionality. Stop gathering rather
+            // than quietly accruing data the install can't display.
+            if (!$this->license->getIsValid()) {
+                return;
+            }
+
+            $this->_registerContentEventListeners();
 
             if (Craft::$app->getRequest()->getIsCpRequest()) {
                 $this->_trackCpActivity();
@@ -104,6 +120,16 @@ class Plugin extends BasePlugin
         $canManageAlerts = $user->checkPermission(self::PERMISSION_MANAGE_ALERTS);
         $canManageSettings = $user->checkPermission(self::PERMISSION_MANAGE_SETTINGS);
 
+        // Locked: collapse to the one page that can unlock it again
+        if (!$this->license->getIsValid()) {
+            $nav['badgeCount'] = 1;
+            $nav['subnav'] = ($canView || $canManageAlerts || $canManageSettings)
+                ? ['license' => ['label' => 'License', 'url' => 'control-tower/license']]
+                : [];
+
+            return $nav;
+        }
+
         $subnav = [];
         if ($canView) {
             $subnav['overview'] = ['label' => 'Overview', 'url' => 'control-tower'];
@@ -120,6 +146,7 @@ class Plugin extends BasePlugin
         }
         if ($canManageSettings) {
             $subnav['settings'] = ['label' => 'Settings', 'url' => 'control-tower/settings'];
+            $subnav['license'] = ['label' => 'License', 'url' => 'control-tower/license'];
         }
 
         $nav['subnav'] = $subnav;
@@ -172,6 +199,9 @@ class Plugin extends BasePlugin
                 $event->rules['control-tower/alerts'] = 'control-tower/dashboard/alerts';
                 $event->rules['control-tower/settings'] = 'control-tower/dashboard/plugin-settings';
 
+                // License (never gated — this is the way back in)
+                $event->rules['control-tower/license'] = 'control-tower/license/index';
+
                 // Rules
                 $event->rules['control-tower/rules'] = 'control-tower/rules/index';
                 $event->rules['control-tower/rules/new'] = 'control-tower/rules/edit';
@@ -215,9 +245,6 @@ class Plugin extends BasePlugin
                 ];
             }
         );
-
-        // Track content events (entry save, delete, etc.)
-        $this->_registerContentEventListeners();
     }
 
     private function _registerContentEventListeners(): void

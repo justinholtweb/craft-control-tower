@@ -8,6 +8,17 @@
    "Plugin settings saved", and every edit is silently discarded. #}
 {% import '_includes/forms.twig' as forms %}
 
+{% set ctLicense = craft.app.plugins.getPlugin('control-tower').license %}
+{% if not ctLicense.getIsValid() %}
+    <div class="readable">
+        <blockquote class="note warning">
+            <p><strong>Control Tower is locked.</strong> {{ ctLicense.getStatusMessage() }}</p>
+            <p>Settings can still be saved, but tracking and dashboards stay off until the license
+                is valid. <a href="{{ cpUrl('control-tower/license') }}">Manage license</a></p>
+        </blockquote>
+    </div>
+{% endif %}
+
 <h2>Tracking</h2>
 
 {{ forms.lightswitchField({

@@ -8,6 +8,8 @@ use justinholtweb\controltower\Plugin;
 
 class ApiController extends Controller
 {
+    use LicenseGateTrait;
+
     public function beforeAction($action): bool
     {
         if (!parent::beforeAction($action)) {
@@ -18,7 +20,7 @@ class ApiController extends Controller
         $this->requireAcceptsJson();
         $this->requirePermission(Plugin::PERMISSION_VIEW);
 
-        return true;
+        return $this->enforceLicense();
     }
 
     public function actionOverview(): \yii\web\Response

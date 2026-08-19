@@ -12,6 +12,8 @@ use yii\web\Response;
 
 class WebhooksController extends Controller
 {
+    use LicenseGateTrait;
+
     public function beforeAction($action): bool
     {
         if (!parent::beforeAction($action)) {
@@ -21,7 +23,7 @@ class WebhooksController extends Controller
         $this->requireCpRequest();
         $this->requirePermission(Plugin::PERMISSION_MANAGE_ALERTS);
 
-        return true;
+        return $this->enforceLicense();
     }
 
     public function actionIndex(): Response

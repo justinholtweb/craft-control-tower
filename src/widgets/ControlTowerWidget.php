@@ -53,9 +53,16 @@ class ControlTowerWidget extends Widget
     public function getBodyHtml(): ?string
     {
         $view = Craft::$app->getView();
+        $plugin = Plugin::getInstance();
+
+        if (!$plugin->license->getIsValid()) {
+            return $view->renderTemplate('control-tower/_widgets/locked', [
+                'message' => $plugin->license->getStatusMessage(),
+            ]);
+        }
+
         $view->registerAssetBundle(ControlTowerWidgetAsset::class);
 
-        $plugin = Plugin::getInstance();
         $settings = $plugin->getSettings();
 
         return $view->renderTemplate('control-tower/_widgets/body', [

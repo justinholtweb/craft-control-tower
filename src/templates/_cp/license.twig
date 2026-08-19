@@ -1,0 +1,131 @@
+{% extends 'control-tower/_cp/_layout' %}
+{% import '_includes/forms.twig' as forms %}
+
+{% set statusLevels = {
+    valid: 'ok',
+    trial: 'warn',
+    invalid: 'error',
+    mismatched: 'error',
+    astray: 'error',
+    unknown: 'warn',
+} %}
+{% set level = isEnforced ? (statusLevels[status] ?? 'warn') : 'ok' %}
+
+{% set issueText = {
+    required: 'This install needs a license key.',
+    no_trials: 'Trials aren’t allowed on this domain.',
+    invalid: 'The license key isn’t valid.',
+    mismatched: 'The license key is assigned to a different domain.',
+    astray: 'The installed version is newer than the last version this license covers.',
+    wrong_edition: 'The license doesn’t cover the active edition.',
+} %}
+
+{% block dashboard %}
+    <div class="ct-panel">
+        <div class="ct-panel__header">
+            <h2 class="ct-panel__title">License status</h2>
+            <span class="ct-license-status ct-license-status--{{ level }}">{{ status|title }}</span>
+        </div>
+        <div class="ct-panel__body">
+            <p>{{ statusMessage }}</p>
+
+            {% if issues %}
+                <ul class="ct-license-issues">
+                    {% for issue in issues %}
+                        <li>{{ issueText[issue] ?? issue }}</li>
+                    {% endfor %}
+                </ul>
+            {% endif %}
+
+            {% if status == 'astray' %}
+                <blockquote class="note">
+                    <p><strong>An expired license isn’t the problem on its own.</strong> Control Tower
+                        licenses cover every version released before they expire, and keep working
+                        indefinitely on those versions. This install is locked because it’s running
+                        <strong>{{ pluginVersion }}</strong>, which is newer than the last version this
+                        license covers.</p>
+                    <p>Two ways out, both valid: renew the license to cover this version, or
+                        downgrade to the last version the license covers and carry on without
+                        renewing.</p>
+                </blockquote>
+            {% endif %}
+
+            {% if not isEnforced %}
+                <p class="light">
+                    Craft treats this as a development domain, or
+                    <code>disableLicenseEnforcement</code> is set in
+                    <code>config/control-tower.php</code>. Every feature is unlocked here regardless
+                    of license status.
+                </p>
+            {% elseif not isValid %}
+                <p class="light">
+                    While locked, Control Tower stops collecting visitor, editor and content data,
+                    stops running alert checks, and hides its dashboards. Existing data is left
+                    untouched and reappears as soon as the license is valid.
+                </p>
+            {% endif %}
+
+            <dl class="ct-info-grid">
+                <dt>Status</dt>
+                <dd><code>{{ status }}</code></dd>
+                <dt>Enforcement</dt>
+                <dd>{{ isEnforced ? 'On' : 'Off (development domain or config override)' }}</dd>
+                <dt>Installed version</dt>
+                <dd>{{ pluginVersion }}</dd>
+                <dt>Key on file</dt>
+                <dd>{{ licenseKey ? licenseKey : 'None' }}</dd>
+            </dl>
+
+            {% if currentUser.admin %}
+                <form method="post" accept-charset="UTF-8" class="ct-license-refresh">
+                    {{ csrfInput() }}
+                    {{ actionInput('control-tower/license/refresh') }}
+                    {{ redirectInput('control-tower/license') }}
+                    <button type="submit" class="btn">Refresh status</button>
+                    <span class="light">Re-checks with Craftnet now, instead of waiting for Craft’s next update check.</span>
+                </form>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="ct-panel">
+        <div class="ct-panel__header">
+            <h2 class="ct-panel__title">License key</h2>
+        </div>
+        <div class="ct-panel__body">
+            {% if canEditKey %}
+                <form method="post" accept-charset="UTF-8">
+                    {{ csrfInput() }}
+                    {{ actionInput('control-tower/license/save') }}
+                    {{ redirectInput('control-tower/license') }}
+
+                    {{ forms.autosuggestField({
+                        label: 'License key',
+                        instructions: 'Paste the key from your Craft Console account. Leave blank to remove the stored key.',
+                        id: 'licenseKey',
+                        name: 'licenseKey',
+                        value: licenseKey,
+                        suggestEnvVars: true,
+                        class: 'code',
+                    }) }}
+
+                    <p class="light">
+                        Saving re-checks the key with Craftnet straight away. If Craftnet can’t be
+                        reached, the status stays <code>unknown</code> until the next refresh.
+                    </p>
+
+                    <button type="submit" class="btn submit">Save license key</button>
+                </form>
+            {% elseif not allowAdminChanges %}
+                <p>
+                    <code>allowAdminChanges</code> is disabled on this environment, so the key can’t
+                    be edited here. Save it on an environment where admin changes are allowed and
+                    deploy the resulting <code>config/project/</code> files — or store it as an
+                    environment variable and reference that variable as the key.
+                </p>
+            {% else %}
+                <p>Only admins can change the license key. Ask an admin to add it.</p>
+            {% endif %}
+        </div>
+    </div>
+{% endblock %}
