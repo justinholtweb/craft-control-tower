@@ -1,6 +1,6 @@
 # Release Notes for Control Tower
 
-## Unreleased
+## 5.2.0 - 2026-09-29
 
 ### Security
 - **Webhook URLs can no longer reach internal addresses.** Every webhook POST — the "Send test" button and real alerts alike — now requires an `http`/`https` URL whose host resolves only to public addresses, pins the connection to those addresses (so DNS cannot be rebound between the check and the connect), refuses URLs carrying credentials, and does not follow redirects. Before, anyone allowed to manage webhooks could make the server POST to the cloud metadata service or the private network. Webhooks pointed at a private address are now refused when saved.
