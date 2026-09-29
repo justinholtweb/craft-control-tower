@@ -3,7 +3,6 @@
 namespace justinholtweb\controltower\services;
 
 use Craft;
-use craft\helpers\Db;
 use justinholtweb\controltower\Plugin;
 use yii\base\Component;
 

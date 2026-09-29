@@ -4,7 +4,6 @@ namespace justinholtweb\controltower\services;
 
 use Craft;
 use craft\helpers\Db;
-use justinholtweb\controltower\Plugin;
 use justinholtweb\controltower\records\VisitorRecord;
 use yii\base\Component;
 
@@ -164,13 +163,29 @@ class VisitorTrackingService extends Component
         $ip = $request->getUserIP() ?? 'unknown';
         $ua = $request->getUserAgent() ?? 'unknown';
 
-        return hash('sha256', $ip . '|' . $ua . '|' . date('Y-m-d'));
+        return $this->_keyedHash($ip . '|' . $ua);
     }
 
+    /**
+     * A visitor's IP, hashed so it cannot be turned back into the IP.
+     *
+     * A plain SHA-256 of an IP is not anonymisation: there are only 2^32 IPv4 addresses, so every
+     * stored hash can be reversed by hashing them all, in minutes. Keyed with the site's security
+     * key and the day, the hash is useless without that key, and yesterday's cannot be linked to
+     * today's even with it.
+     */
     private function _hashIp(): ?string
     {
         $ip = Craft::$app->getRequest()->getUserIP();
-        return $ip ? hash('sha256', $ip) : null;
+        return $ip ? $this->_keyedHash($ip) : null;
+    }
+
+    /** HMAC-SHA256 keyed on the site's security key and today's date. */
+    private function _keyedHash(string $value): string
+    {
+        $key = Craft::$app->getConfig()->getGeneral()->securityKey . '|control-tower|' . date('Y-m-d');
+
+        return hash_hmac('sha256', $value, $key);
     }
 
     private function _isBot(?string $userAgent): bool

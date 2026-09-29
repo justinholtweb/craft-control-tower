@@ -233,8 +233,12 @@ class MetricsCollectorService extends Component
         $minutes = intdiv($seconds % 3600, 60);
 
         $parts = [];
-        if ($days > 0) $parts[] = "{$days}d";
-        if ($hours > 0) $parts[] = "{$hours}h";
+        if ($days > 0) {
+            $parts[] = "{$days}d";
+        }
+        if ($hours > 0) {
+            $parts[] = "{$hours}h";
+        }
         $parts[] = "{$minutes}m";
 
         return implode(' ', $parts);

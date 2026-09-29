@@ -1,7 +1,7 @@
 {% extends 'control-tower/_cp/_layout' %}
 
 {% block dashboard %}
-    <div class="ct-grid ct-grid--stats" style="margin-bottom: 20px;">
+    <div class="ct-grid ct-grid--stats ct-section">
         <div class="ct-stat-card">
             <span class="ct-stat-card__label">Active Editors</span>
             <span class="ct-stat-card__value" id="ct-editors-count">{{ editors|length }}</span>
@@ -16,7 +16,7 @@
     </div>
 
     {% if collisions|length %}
-        <div class="ct-panel" style="margin-bottom: 20px;">
+        <div class="ct-panel ct-section">
             <div class="ct-panel__header">
                 <h3 class="ct-panel__title">Collision Warnings</h3>
             </div>
@@ -81,7 +81,7 @@
     </div>
 
     {% if draftCounts|length %}
-        <div class="ct-panel" style="margin-top: 20px;">
+        <div class="ct-panel ct-section-after">
             <div class="ct-panel__header">
                 <h3 class="ct-panel__title">Draft Counts by User</h3>
             </div>

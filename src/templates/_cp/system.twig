@@ -1,7 +1,7 @@
 {% extends 'control-tower/_cp/_layout' %}
 
 {% block dashboard %}
-    <div class="ct-grid ct-grid--stats" style="margin-bottom: 20px;">
+    <div class="ct-grid ct-grid--stats ct-section">
         <div class="ct-stat-card">
             <span class="ct-stat-card__label">Server Health</span>
             <span id="ct-server-health" class="ct-badge ct-badge--{{ serverHealth }}">
@@ -11,19 +11,19 @@
         </div>
         <div class="ct-stat-card">
             <span class="ct-stat-card__label">Craft Version</span>
-            <span class="ct-stat-card__value" style="font-size: 18px;">{{ snapshot.craftVersion }}</span>
+            <span class="ct-stat-card__value ct-stat-card__value--text">{{ snapshot.craftVersion }}</span>
         </div>
         <div class="ct-stat-card">
             <span class="ct-stat-card__label">PHP Version</span>
-            <span class="ct-stat-card__value" style="font-size: 18px;">{{ snapshot.phpVersion }}</span>
+            <span class="ct-stat-card__value ct-stat-card__value--text">{{ snapshot.phpVersion }}</span>
         </div>
         <div class="ct-stat-card">
             <span class="ct-stat-card__label">Environment</span>
-            <span class="ct-stat-card__value" style="font-size: 18px;">{{ snapshot.environment }}</span>
+            <span class="ct-stat-card__value ct-stat-card__value--text">{{ snapshot.environment }}</span>
         </div>
         <div class="ct-stat-card">
             <span class="ct-stat-card__label">Dev Mode</span>
-            <span class="ct-stat-card__value" style="font-size: 18px;">{{ snapshot.devMode ? 'On' : 'Off' }}</span>
+            <span class="ct-stat-card__value ct-stat-card__value--text">{{ snapshot.devMode ? 'On' : 'Off' }}</span>
         </div>
     </div>
 
@@ -46,7 +46,7 @@
                     <div class="ct-metric-bar">
                         <span class="ct-metric-bar__label">{{ m.label }}</span>
                         <div class="ct-metric-bar__track">
-                            <div class="ct-metric-bar__fill ct-metric-bar__fill--{{ color }}" style="width: {{ val }}%;"></div>
+                            <div class="ct-metric-bar__fill ct-metric-bar__fill--{{ color }}" style="--ct-fill: {{ val }}%;"></div>
                         </div>
                         <span class="ct-metric-bar__value">{{ val is not null ? val ~ m.suffix : 'N/A' }}</span>
                     </div>
@@ -83,7 +83,7 @@
         </div>
     </div>
 
-    <div class="ct-toolbar" style="margin-top: 20px;">
+    <div class="ct-toolbar ct-section-after">
         <button class="ct-period-btn active" data-period="15m">15m</button>
         <button class="ct-period-btn" data-period="1h">1h</button>
         <button class="ct-period-btn" data-period="24h">24h</button>

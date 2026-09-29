@@ -5,7 +5,7 @@ namespace justinholtweb\controltower\services;
 use Craft;
 use craft\elements\User;
 use craft\helpers\Db;
-use GuzzleHttp\Exception\GuzzleException;
+use justinholtweb\controltower\helpers\Ip;
 use justinholtweb\controltower\models\AlertRule;
 use justinholtweb\controltower\models\Webhook;
 use justinholtweb\controltower\notifications\GenericFormatter;
@@ -149,33 +149,103 @@ class AlertNotifierService extends Component
     }
 
     /**
+     * POSTs a payload to a webhook URL — only if the URL is somewhere a webhook may go.
+     *
+     * The URL is typed into the CP, so without these rules anybody who may manage webhooks can
+     * make the server POST to the cloud metadata service or anything on the private network:
+     *
+     * 1. `http` and `https` only.
+     * 2. Every address the host resolves to must be public ({@see Ip::resolvePublic()}).
+     * 3. The connection is pinned to those addresses with `CURLOPT_RESOLVE`, so a second DNS
+     *    lookup at connect time cannot rebind the host somewhere private.
+     * 4. Redirects are not followed — a public host answering 302 to `http://127.0.0.1` is the
+     *    same attack one hop later. Slack, Teams and Zapier all answer webhooks directly.
+     *
+     * Sites that genuinely post to an internal endpoint set `allowPrivateWebhookHosts` in
+     * `config/control-tower.php`; rules 2 and 3 are then skipped, 1 and 4 still hold.
+     *
      * @return array{ok: bool, status: int|null, body: string}
      */
     private function postWebhook(string $url, array $payload): array
     {
+        $target = $this->webhookTarget($url);
+
+        if (is_string($target)) {
+            Craft::warning("Control Tower refused to POST a webhook to {$url}: {$target}", __METHOD__);
+
+            return ['ok' => false, 'status' => null, 'body' => $target];
+        }
+
+        $options = [
+            'json' => $payload,
+            'http_errors' => false,
+            'allow_redirects' => false,
+        ];
+
+        if ($target['addresses'] !== []) {
+            $options['curl'] = [
+                CURLOPT_RESOLVE => array_map(
+                    static fn(string $ip) => sprintf('%s:%d:%s', $target['host'], $target['port'], str_contains($ip, ':') ? "[{$ip}]" : $ip),
+                    $target['addresses'],
+                ),
+                CURLOPT_PROTOCOLS => CURLPROTO_HTTP | CURLPROTO_HTTPS,
+            ];
+        }
+
         $client = Craft::createGuzzleClient([
             'timeout' => 5,
             'connect_timeout' => 3,
         ]);
 
         try {
-            $response = $client->post($url, [
-                'json' => $payload,
-                'http_errors' => false,
-            ]);
+            $response = $client->post($url, $options);
             $status = $response->getStatusCode();
             $body = (string) $response->getBody();
             $ok = $status >= 200 && $status < 300;
 
             if (!$ok) {
-                Craft::warning("Control Tower webhook POST failed ({$status}) to {$url}: {$body}", __METHOD__);
+                Craft::warning("Control Tower webhook POST failed ({$status}) to {$url}: " . mb_strimwidth($body, 0, 500, '…'), __METHOD__);
             }
 
             return ['ok' => $ok, 'status' => $status, 'body' => $body];
-        } catch (GuzzleException|\Throwable $e) {
+        } catch (\Throwable $e) {
             Craft::error("Control Tower webhook POST threw: " . $e->getMessage(), __METHOD__);
             return ['ok' => false, 'status' => null, 'body' => $e->getMessage()];
         }
+    }
+
+    /**
+     * Where a webhook URL may be sent, or why it may not.
+     *
+     * @return array{host: string, port: int, addresses: string[]}|string The pinned target, or the refusal reason.
+     */
+    public function webhookTarget(string $url): array|string
+    {
+        $parts = parse_url($url);
+        $scheme = strtolower((string) ($parts['scheme'] ?? ''));
+        $host = (string) ($parts['host'] ?? '');
+
+        if (!in_array($scheme, ['http', 'https'], true) || $host === '') {
+            return 'Only http:// and https:// webhook URLs are allowed.';
+        }
+
+        if (isset($parts['user']) || isset($parts['pass'])) {
+            return 'Webhook URLs may not carry a username or password.';
+        }
+
+        $port = (int) ($parts['port'] ?? ($scheme === 'https' ? 443 : 80));
+
+        if (Plugin::getInstance()->getSettings()->allowPrivateWebhookHosts) {
+            return ['host' => $host, 'port' => $port, 'addresses' => []];
+        }
+
+        $addresses = Ip::resolvePublic($host);
+
+        if ($addresses === []) {
+            return 'The webhook host does not resolve to a public address.';
+        }
+
+        return ['host' => trim($host, '[]'), 'port' => $port, 'addresses' => $addresses];
     }
 
     private function buildPayload(string $type, NotificationContext $ctx): array

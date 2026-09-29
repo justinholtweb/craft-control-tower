@@ -136,13 +136,21 @@ class WebhooksController extends Controller
 
         $result = Plugin::getInstance()->alertNotifier->testWebhook($webhook);
 
+        // The status only. Echoing the response body (or a connection error) back to the browser
+        // turned a delivery test into a way to read, or port-scan, whatever the URL pointed at.
+        // The body is in the Craft log for whoever can read that.
+        $refused = $result['status'] === null
+            && is_string($target = Plugin::getInstance()->alertNotifier->webhookTarget($webhook->url));
+
         return $this->asJson([
             'success' => $result['ok'],
             'status' => $result['status'],
-            'body' => mb_strimwidth((string) ($result['body'] ?? ''), 0, 500, '…'),
-            'message' => $result['ok']
-                ? "Test payload delivered (HTTP {$result['status']})."
-                : "Delivery failed" . ($result['status'] ? " (HTTP {$result['status']})" : '') . ".",
+            'message' => match (true) {
+                $result['ok'] => "Test payload delivered (HTTP {$result['status']}).",
+                $refused => $target,
+                $result['status'] !== null => "Delivery failed (HTTP {$result['status']}). Details are in the Craft log.",
+                default => 'Delivery failed: the webhook could not be reached. Details are in the Craft log.',
+            },
         ]);
     }
 }

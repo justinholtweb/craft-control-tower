@@ -302,6 +302,7 @@
 }
 
 .ct-metric-bar__fill {
+    width: var(--ct-fill, 0%);
     height: 100%;
     border-radius: 4px;
     transition: width 0.5s ease;
@@ -538,4 +539,63 @@
     align-items: center;
     gap: 10px;
     margin-top: 14px;
+}
+
+/* ==========================================================================
+   Layout utilities — formerly inline styles in the templates.
+   Spacing uses Craft's CP scale (--m 14px, --l 18px, --xl 24px), with fallbacks
+   for the dashboard widget, which can render outside a full CP page.
+   ========================================================================== */
+
+.ct-section {
+    margin-block-end: var(--xl, 24px);
+}
+
+.ct-section--compact {
+    margin-block-end: var(--m, 14px);
+}
+
+.ct-section-after {
+    margin-block-start: var(--xl, 24px);
+}
+
+.ct-footnote {
+    margin-block-start: var(--l, 18px);
+    text-align: center;
+}
+
+.ct-footnote--compact {
+    margin-block-start: var(--m, 14px);
+}
+
+.ct-stat-card__value--text {
+    font-size: 18px;
+}
+
+.ct-panel__header--split {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.ct-inline-form {
+    display: inline;
+}
+
+.ct-test-result {
+    margin-inline-start: var(--s, 8px);
+    font-size: 12px;
+}
+
+.ct-rule-operator {
+    flex: 0 0 120px;
+}
+
+.ct-rule-threshold {
+    flex: 1;
+}
+
+.ct-rule-description {
+    margin-block-start: var(--2xs, 2px);
+    font-size: 11px;
 }

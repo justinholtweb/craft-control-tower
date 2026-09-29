@@ -3,6 +3,7 @@
 namespace justinholtweb\controltower\models;
 
 use craft\base\Model;
+use justinholtweb\controltower\Plugin;
 
 class Webhook extends Model
 {
@@ -29,7 +30,21 @@ class Webhook extends Model
             [['name'], 'string', 'max' => 255],
             [['type'], 'in', 'range' => array_keys(self::TYPES)],
             [['url'], 'url', 'defaultScheme' => 'https'],
+            [['url'], 'validateTarget'],
         ];
+    }
+
+    /**
+     * Refuses a URL the notifier would refuse anyway, so the author finds out when they save it
+     * rather than when the first alert silently fails to arrive.
+     */
+    public function validateTarget(string $attribute): void
+    {
+        $target = Plugin::getInstance()->alertNotifier->webhookTarget($this->url);
+
+        if (is_string($target)) {
+            $this->addError($attribute, $target);
+        }
     }
 
     public function maskedUrl(): string

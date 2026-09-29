@@ -2,7 +2,7 @@
 
 {% block dashboard %}
     <div class="ct-panel">
-        <div class="ct-panel__header" style="display:flex; align-items:center; justify-content:space-between;">
+        <div class="ct-panel__header ct-panel__header--split">
             <h3 class="ct-panel__title">Webhooks</h3>
             <a href="{{ cpUrl('control-tower/webhooks/new') }}" class="btn submit add icon">New webhook</a>
         </div>
@@ -35,7 +35,7 @@
                                 {% endif %}
                             </td>
                             <td class="thin">
-                                <form method="post" style="display:inline;">
+                                <form method="post" class="ct-inline-form">
                                     {{ csrfInput() }}
                                     {{ hiddenInput('action', 'control-tower/webhooks/delete') }}
                                     {{ hiddenInput('id', w.id) }}

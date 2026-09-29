@@ -2,7 +2,7 @@
 
 {% block dashboard %}
     {# Top row — Key stats #}
-    <div class="ct-grid ct-grid--stats" style="margin-bottom: 20px;">
+    <div class="ct-grid ct-grid--stats ct-section">
         <div class="ct-stat-card">
             <span class="ct-stat-card__label">Active Visitors</span>
             <span class="ct-stat-card__value" id="ct-visitors-count">{{ visitorCount }}</span>
@@ -40,7 +40,7 @@
     </div>
 
     {# Middle row — Panels #}
-    <div class="ct-grid ct-grid--2" style="margin-bottom: 20px;">
+    <div class="ct-grid ct-grid--2 ct-section">
         {# Active Editors Panel #}
         <div class="ct-panel">
             <div class="ct-panel__header">
@@ -164,7 +164,7 @@
         </div>
     </div>
 
-    <p style="margin-top: 16px; text-align: center;">
+    <p class="ct-footnote">
         <span class="ct-stat-card__meta">Total content: {{ contentSummary.entries }} entries &middot; {{ contentSummary.assets }} assets &middot; {{ contentSummary.categories }} categories &middot; {{ contentSummary.users }} users</span>
     </p>
 {% endblock %}

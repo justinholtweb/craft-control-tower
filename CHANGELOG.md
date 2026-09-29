@@ -1,5 +1,23 @@
 # Release Notes for Control Tower
 
+## Unreleased
+
+### Security
+- **Webhook URLs can no longer reach internal addresses.** Every webhook POST — the "Send test" button and real alerts alike — now requires an `http`/`https` URL whose host resolves only to public addresses, pins the connection to those addresses (so DNS cannot be rebound between the check and the connect), refuses URLs carrying credentials, and does not follow redirects. Before, anyone allowed to manage webhooks could make the server POST to the cloud metadata service or the private network. Webhooks pointed at a private address are now refused when saved.
+- **"Send test" reports the HTTP status only.** It used to echo the first 500 characters of the response body (or the connection error) back to the browser, which let the test button read internal endpoints. The body is still logged.
+- **Visitor IP hashes are keyed.** IPs were stored as a plain SHA-256, which can be reversed by hashing all 2^32 IPv4 addresses. They are now an HMAC keyed on the site's security key and the day. A migration clears the hashes stored by earlier versions.
+
+### Added
+- `allowPrivateWebhookHosts` config setting for sites that genuinely alert an internal endpoint. Set it in `config/control-tower.php`; like `disableLicenseEnforcement`, it is not exposed in the CP. Redirects are still not followed.
+- Integration checks (`tests/integration/checks.php`, `http.php`) and ECS.
+
+### Fixed
+- **Webhook alerts sent from the queue no longer fail.** Building the alert link read the request's host, which a console queue runner doesn't have, so every Slack/Teams/generic webhook sent from a CLI queue worker threw.
+
+### Changed
+- Dashboard, rule and webhook screens use plugin CSS classes on Craft's spacing scale instead of inline styles. The alert email keeps its inline styles, which email clients need.
+- Visitors active when you upgrade are counted once more, because session hashes are now keyed too.
+
 ## 5.1.4 - 2026-08-19
 
 ### Added

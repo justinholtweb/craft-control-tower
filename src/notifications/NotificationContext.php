@@ -3,6 +3,7 @@
 namespace justinholtweb\controltower\notifications;
 
 use Craft;
+use craft\helpers\UrlHelper;
 use justinholtweb\controltower\models\AlertRule;
 use justinholtweb\controltower\records\AlertRecord;
 
@@ -25,9 +26,9 @@ class NotificationContext
         $this->rule = $rule;
         $this->siteName = Craft::$app->getSystemName() ?: 'Craft CMS';
         $this->environment = (string) (Craft::$app->env ?? 'production');
-        $this->alertUrl = rtrim(Craft::$app->getRequest()->getHostInfo() ?? '', '/')
-            . '/' . trim((string) Craft::$app->getConfig()->getGeneral()->cpTrigger, '/')
-            . '/control-tower/alerts';
+        // Alerts are sent from a queue job, which usually runs on the console — where the request
+        // has no host. cpUrl() builds from baseCpUrl / the primary site instead.
+        $this->alertUrl = UrlHelper::cpUrl('control-tower/alerts');
     }
 
     public function severityColorHex(): string

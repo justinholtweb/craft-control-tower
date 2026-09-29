@@ -71,6 +71,19 @@ class Settings extends Model
      */
     public bool $disableLicenseEnforcement = false;
 
+    /**
+     * Allow webhooks to private, loopback and link-local addresses.
+     *
+     * Off by default: a webhook URL is typed into the CP, and a server that will POST to any
+     * address is a way into the cloud metadata service and the private network. Set it in
+     * `config/control-tower.php` for a site that genuinely alerts an internal endpoint:
+     *
+     *     return ['allowPrivateWebhookHosts' => true];
+     *
+     * Deliberately absent from the settings screen, like `disableLicenseEnforcement`.
+     */
+    public bool $allowPrivateWebhookHosts = false;
+
     public function defineRules(): array
     {
         return [

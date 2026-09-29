@@ -49,7 +49,7 @@ class Plugin extends BasePlugin
     public const PERMISSION_MANAGE_ALERTS = 'controltower:manageAlerts';
     public const PERMISSION_MANAGE_SETTINGS = 'controltower:manageSettings';
 
-    public string $schemaVersion = '1.1.0';
+    public string $schemaVersion = '1.2.0';
     public bool $hasCpSection = true;
     public bool $hasCpSettings = true;
 
@@ -82,7 +82,7 @@ class Plugin extends BasePlugin
     {
         parent::init();
 
-        Craft::$app->onInit(function () {
+        Craft::$app->onInit(function() {
             if (!$this->isInstalled) {
                 return;
             }
@@ -180,7 +180,7 @@ class Plugin extends BasePlugin
         Event::on(
             Dashboard::class,
             Dashboard::EVENT_REGISTER_WIDGET_TYPES,
-            function (RegisterComponentTypesEvent $event) {
+            function(RegisterComponentTypesEvent $event) {
                 $event->types[] = ControlTowerWidget::class;
             }
         );
@@ -189,7 +189,7 @@ class Plugin extends BasePlugin
         Event::on(
             UrlManager::class,
             UrlManager::EVENT_REGISTER_CP_URL_RULES,
-            function (RegisterUrlRulesEvent $event) {
+            function(RegisterUrlRulesEvent $event) {
                 $event->rules['control-tower'] = 'control-tower/dashboard/overview';
                 $event->rules['control-tower/visitors'] = 'control-tower/dashboard/visitors';
                 $event->rules['control-tower/editors'] = 'control-tower/dashboard/editors';
@@ -228,7 +228,7 @@ class Plugin extends BasePlugin
         Event::on(
             UserPermissions::class,
             UserPermissions::EVENT_REGISTER_PERMISSIONS,
-            function (RegisterUserPermissionsEvent $event) {
+            function(RegisterUserPermissionsEvent $event) {
                 $event->permissions[] = [
                     'heading' => 'Control Tower',
                     'permissions' => [
@@ -253,7 +253,7 @@ class Plugin extends BasePlugin
         Event::on(
             \craft\elements\Entry::class,
             \craft\elements\Entry::EVENT_AFTER_SAVE,
-            function (\craft\events\ModelEvent $event) {
+            function(\craft\events\ModelEvent $event) {
                 $this->contentHealth->recordContentEvent(
                     'entry',
                     $event->sender->id,
@@ -267,7 +267,7 @@ class Plugin extends BasePlugin
         Event::on(
             \craft\elements\Entry::class,
             \craft\elements\Entry::EVENT_AFTER_DELETE,
-            function (Event $event) {
+            function(Event $event) {
                 $this->contentHealth->recordContentEvent(
                     'entry',
                     $event->sender->id,
@@ -281,7 +281,7 @@ class Plugin extends BasePlugin
         Event::on(
             \craft\elements\Asset::class,
             \craft\elements\Asset::EVENT_AFTER_SAVE,
-            function (\craft\events\ModelEvent $event) {
+            function(\craft\events\ModelEvent $event) {
                 $this->contentHealth->recordContentEvent(
                     'asset',
                     $event->sender->id,

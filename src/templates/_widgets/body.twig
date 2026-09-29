@@ -1,6 +1,6 @@
 <div class="ct-widget" data-refresh-interval="{{ widget.refreshInterval }}">
     {# Top row — stat cards #}
-    <div class="ct-grid ct-grid--stats" style="margin-bottom: 12px;">
+    <div class="ct-grid ct-grid--stats ct-section ct-section--compact">
         {% if widget.showVisitors %}
             <div class="ct-stat-card">
                 <span class="ct-stat-card__label">Visitors</span>
@@ -48,7 +48,7 @@
 
     {# Editors mini-list #}
     {% if widget.showEditors and editors|length %}
-        <div class="ct-panel" style="margin-bottom: 12px;">
+        <div class="ct-panel ct-section ct-section--compact">
             <div class="ct-panel__header">
                 <h3 class="ct-panel__title">Active Editors</h3>
             </div>
@@ -82,7 +82,7 @@
 
     {# Top URLs mini-list #}
     {% if widget.showTopUrls and topUrls|length %}
-        <div class="ct-panel" style="margin-bottom: 12px;">
+        <div class="ct-panel ct-section ct-section--compact">
             <div class="ct-panel__header">
                 <h3 class="ct-panel__title">Top URLs</h3>
             </div>
@@ -121,7 +121,7 @@
     {% endif %}
 
     {# Link to full CP section #}
-    <p style="margin-top: 12px; text-align: center;">
+    <p class="ct-footnote ct-footnote--compact">
         <a href="{{ cpUrl('control-tower') }}" class="ct-link-full">Open Control Tower</a>
     </p>
 </div>

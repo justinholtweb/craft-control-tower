@@ -2,10 +2,9 @@
 
 namespace justinholtweb\controltower\controllers;
 
-use Craft;
 use craft\web\Controller;
-use justinholtweb\controltower\Plugin;
 use justinholtweb\controltower\assets\ControlTowerCpAsset;
+use justinholtweb\controltower\Plugin;
 
 class DashboardController extends Controller
 {

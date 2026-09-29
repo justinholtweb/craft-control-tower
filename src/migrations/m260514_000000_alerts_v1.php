@@ -2,7 +2,6 @@
 
 namespace justinholtweb\controltower\migrations;
 
-use Craft;
 use craft\db\Migration;
 use craft\helpers\Db;
 

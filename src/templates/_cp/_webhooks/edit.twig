@@ -59,11 +59,11 @@
             </div>
         </div>
 
-        <div style="margin-top:20px; display:flex; gap:10px; align-items:center;">
+        <div class="buttons ct-section-after">
             <button type="submit" class="btn submit">Save webhook</button>
             <a href="{{ cpUrl('control-tower/webhooks') }}" class="btn">Cancel</a>
             <button type="button" class="btn" id="ct-webhook-test">Send test</button>
-            <span id="ct-webhook-test-result" style="margin-left:10px; font-size:12px;"></span>
+            <span id="ct-webhook-test-result" class="ct-test-result light"></span>
         </div>
     </form>
 

@@ -51,7 +51,7 @@
                     }) }}
 
                     <div class="flex">
-                        <div style="flex:0 0 120px;">
+                        <div class="ct-rule-operator">
                             {{ forms.selectField({
                                 label: 'Operator',
                                 id: 'operator',
@@ -62,7 +62,7 @@
                                 errors: rule.getErrors('operator'),
                             }) }}
                         </div>
-                        <div style="flex:1;">
+                        <div class="ct-rule-threshold">
                             {{ forms.textField({
                                 label: 'Threshold',
                                 id: 'threshold',
@@ -163,7 +163,7 @@
             </div>
         </div>
 
-        <div style="margin-top:20px;">
+        <div class="buttons ct-section-after">
             <button type="submit" class="btn submit">Save rule</button>
             <a href="{{ cpUrl('control-tower/rules') }}" class="btn">Cancel</a>
         </div>

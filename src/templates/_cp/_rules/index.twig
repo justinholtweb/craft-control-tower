@@ -2,7 +2,7 @@
 
 {% block dashboard %}
     <div class="ct-panel">
-        <div class="ct-panel__header" style="display:flex; align-items:center; justify-content:space-between;">
+        <div class="ct-panel__header ct-panel__header--split">
             <h3 class="ct-panel__title">Alert Rules</h3>
             <a href="{{ cpUrl('control-tower/rules/new') }}" class="btn submit add icon">New rule</a>
         </div>
@@ -29,7 +29,7 @@
                                     <strong>{{ rule.name }}</strong>
                                 </a>
                                 {% if rule.description %}
-                                    <div class="light" style="font-size:11px; margin-top:2px;">{{ rule.description }}</div>
+                                    <div class="light ct-rule-description">{{ rule.description }}</div>
                                 {% endif %}
                             </td>
                             <td>{{ meta ? meta.label : rule.metric }}</td>
@@ -53,7 +53,7 @@
                                 {% endif %}
                             </td>
                             <td class="thin">
-                                <form method="post" style="display:inline;">
+                                <form method="post" class="ct-inline-form">
                                     {{ csrfInput() }}
                                     {{ hiddenInput('action', 'control-tower/rules/delete') }}
                                     {{ hiddenInput('id', rule.id) }}
