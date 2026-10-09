@@ -190,6 +190,9 @@ class AlertService extends Component
         foreach ($this->getRules(enabledOnly: true) as $rule) {
             $this->checkRule($rule);
         }
+
+        // The health endpoint reports a stalled sweep — alerts that can't fire look like no alerts.
+        Plugin::getInstance()->health->markChecked();
     }
 
     /**

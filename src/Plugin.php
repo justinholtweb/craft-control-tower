@@ -16,6 +16,7 @@ use justinholtweb\controltower\services\AlertNotifierService;
 use justinholtweb\controltower\services\AlertService;
 use justinholtweb\controltower\services\ContentHealthService;
 use justinholtweb\controltower\services\EditorTrackingService;
+use justinholtweb\controltower\services\HealthService;
 use justinholtweb\controltower\services\LicenseService;
 use justinholtweb\controltower\services\MetricRegistryService;
 use justinholtweb\controltower\services\MetricsCollectorService;
@@ -32,6 +33,7 @@ use yii\base\Event;
  * @property-read AlertService $alerts
  * @property-read ContentHealthService $contentHealth
  * @property-read EditorTrackingService $editorTracking
+ * @property-read HealthService $health
  * @property-read LicenseService $license
  * @property-read MetricRegistryService $metricRegistry
  * @property-read MetricsCollectorService $metricsCollector
@@ -48,6 +50,9 @@ class Plugin extends BasePlugin
     public const PERMISSION_VIEW = 'controltower:viewDashboard';
     public const PERMISSION_MANAGE_ALERTS = 'controltower:manageAlerts';
     public const PERMISSION_MANAGE_SETTINGS = 'controltower:manageSettings';
+
+    /** Site route of the health endpoint. */
+    public const HEALTH_PATH = 'control-tower/health';
 
     public string $schemaVersion = '1.2.0';
     public bool $hasCpSection = true;
@@ -68,6 +73,7 @@ class Plugin extends BasePlugin
                 'alerts' => AlertService::class,
                 'contentHealth' => ContentHealthService::class,
                 'editorTracking' => EditorTrackingService::class,
+                'health' => HealthService::class,
                 'license' => LicenseService::class,
                 'metricRegistry' => MetricRegistryService::class,
                 'metricsCollector' => MetricsCollectorService::class,
@@ -224,6 +230,15 @@ class Plugin extends BasePlugin
             }
         );
 
+        // Health endpoint for uptime monitors. Always routed; it answers 404 until a token is set.
+        Event::on(
+            UrlManager::class,
+            UrlManager::EVENT_REGISTER_SITE_URL_RULES,
+            function(RegisterUrlRulesEvent $event) {
+                $event->rules[self::HEALTH_PATH] = 'control-tower/health/index';
+            }
+        );
+
         // Register user permissions
         Event::on(
             UserPermissions::class,
@@ -314,6 +329,13 @@ class Plugin extends BasePlugin
         }
 
         $request = Craft::$app->getRequest();
+
+        // A monitor polling the health endpoint every minute isn't a visitor.
+        $action = $request->getActionSegments();
+        if ($request->getPathInfo() === self::HEALTH_PATH || ($action !== null && array_slice($action, 0, 2) === ['control-tower', 'health'])) {
+            return;
+        }
+
         $this->visitorTracking->recordVisit(
             $request->getPathInfo(),
             $request->getUserAgent(),

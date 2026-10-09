@@ -156,6 +156,39 @@
 }) }}
 
 <hr>
+<h2>Health Endpoint</h2>
+
+{% set ctHealth = craft.app.plugins.getPlugin('control-tower').health %}
+<p class="instructions">
+    A JSON health report for uptime monitors at <code>{{ siteUrl('control-tower/health') }}</code>:
+    HTTP 200 when healthy, 503 while an alert is firing or the alert checks have stalled. The same
+    report is available as <code>php craft control-tower/status</code>, which needs no token.
+</p>
+
+{{ forms.autosuggestField({
+    label: 'Health Token',
+    instructions: 'Leave empty to keep the endpoint off. Use an environment variable such as `$CONTROL_TOWER_HEALTH_TOKEN` holding at least 32 random characters, and send it as `Authorization: Bearer <token>`.',
+    id: 'healthToken',
+    name: 'healthToken',
+    value: settings.healthToken,
+    suggestEnvVars: true,
+    errors: settings.getErrors('healthToken'),
+    tip: ctHealth.getIsEnabled() ? 'The endpoint is on.' : 'The endpoint is off: no token is set, its environment variable is undefined, or it is shorter than 32 characters.',
+}) }}
+
+{{ forms.textField({
+    label: 'Stalled Check Threshold',
+    instructions: 'Minutes since the last alert sweep before the health report counts the checks as stalled and fails. 0 turns this off.',
+    id: 'healthMaxCheckAge',
+    name: 'healthMaxCheckAge',
+    value: settings.healthMaxCheckAge,
+    type: 'number',
+    min: 0,
+    size: 5,
+    errors: settings.getErrors('healthMaxCheckAge'),
+}) }}
+
+<hr>
 <h2>Alerts</h2>
 
 <p class="instructions">

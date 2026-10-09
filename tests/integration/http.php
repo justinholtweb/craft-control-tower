@@ -137,6 +137,12 @@ foreach (['control-tower', 'control-tower/visitors', 'control-tower/editors', 'c
     });
 }
 
+check('the settings screen offers the health token as an env-var field, and says the endpoint is off', function() use ($cp) {
+    [$code, $html] = http('GET', "$cp/control-tower/settings");
+    return $code === 200 && str_contains($html, 'Health Token') && str_contains($html, '"name":"settings[healthToken]"')
+        && str_contains($html, 'The endpoint is off') ?: "HTTP $code";
+});
+
 check('webhook test without a CSRF token is refused', function() use ($cp) {
     [$code] = http('POST', "$cp/actions/control-tower/webhooks/test", ['url' => 'http://127.0.0.1/'], ['Accept: application/json']);
     return $code === 400 ?: "HTTP $code";

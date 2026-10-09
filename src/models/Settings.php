@@ -3,6 +3,8 @@
 namespace justinholtweb\controltower\models;
 
 use craft\base\Model;
+use craft\helpers\App;
+use justinholtweb\controltower\services\HealthService;
 
 class Settings extends Model
 {
@@ -84,14 +86,49 @@ class Settings extends Model
      */
     public bool $allowPrivateWebhookHosts = false;
 
+    /**
+     * Token for the `/control-tower/health` endpoint. Empty (the default) keeps the endpoint off.
+     *
+     * Set it to an environment variable reference such as `$CONTROL_TOWER_HEALTH_TOKEN` so the
+     * secret stays out of project config. It is resolved with `App::parseEnv()`, must be at least
+     * 32 characters, and an undefined variable keeps the endpoint off rather than opening it.
+     */
+    public ?string $healthToken = null;
+
+    /**
+     * Minutes after the last alert sweep before the health report counts the checks as stalled
+     * (status `stale`, HTTP 503). 0 turns the staleness check off.
+     */
+    public int $healthMaxCheckAge = 30;
+
     public function defineRules(): array
     {
         return [
+            [['healthMaxCheckAge'], 'integer', 'min' => 0],
+            [['healthToken'], 'filter', 'filter' => fn($value) => is_string($value) && trim($value) !== '' ? trim($value) : null],
+            [['healthToken'], 'validateHealthToken'],
             [['refreshInterval', 'visitorTimeout', 'editorTimeout'], 'integer', 'min' => 1],
             [['visitorRetentionDays', 'editorRetentionDays', 'contentEventRetentionDays', 'metricRetentionDays', 'alertRetentionDays'], 'integer', 'min' => 1],
             [['staleContentDays'], 'integer', 'min' => 1],
             [['metricsPollingInterval'], 'integer', 'min' => 10],
             [['queueFailureAlertThreshold', 'errorRateAlertThreshold', 'notFoundAlertThreshold'], 'integer', 'min' => 1],
         ];
+    }
+
+    /**
+     * Only a literal token is checked here. An environment variable can be set after the setting
+     * is saved, and a token too short to use simply keeps the endpoint closed.
+     */
+    public function validateHealthToken(string $attribute): void
+    {
+        $value = $this->$attribute;
+        if ($value === null || $value === '' || str_starts_with($value, '$')) {
+            return;
+        }
+
+        $resolved = App::parseEnv($value);
+        if (is_string($resolved) && strlen($resolved) < HealthService::MIN_TOKEN_LENGTH) {
+            $this->addError($attribute, 'The health token must be at least ' . HealthService::MIN_TOKEN_LENGTH . ' characters. Better still, set it to an environment variable such as $CONTROL_TOWER_HEALTH_TOKEN.');
+        }
     }
 }

@@ -11,6 +11,7 @@ Live operational monitoring dashboard for Craft CMS 5. Know what's happening on 
 - **System Pulse** — CPU, memory, disk, load average, DB response time, PHP info, uptime
 - **Configurable Alert Rules** — Build alerts in the CP, no config files. Each rule has a metric, operator, threshold, severity, and enable toggle. Queue failures, editor collisions, and server resource spikes ship as default rules — edit, disable, or add your own. Eleven built-in metrics cover failed and pending queue jobs, CPU / memory / disk %, database response time, editor collisions, active editors, stale content, failed logins and critical updates — and the metric registry is extensible: other plugins and modules add their own through `MetricRegistryService::EVENT_REGISTER_METRICS`, and those appear in the rule editor, alert checks, System Pulse, the widget and webhook payloads exactly like the built-ins (see [Custom alert metrics](#custom-alert-metrics)).
 - **Webhook & Email Notifications** — Send alerts to Slack, Microsoft Teams (Power Automate / Adaptive Cards), Zapier, or any JSON receiver. Per-rule email recipients with admin-notify toggle. A **Send Test** button verifies delivery before you ship the rule. Flap throttling (`minNotifyInterval`) suppresses noisy repeats, and "notify on resolve" closes the loop. Notifications dispatch asynchronously via a queue job so SMTP / webhook latency never blocks a request.
+- **Health Endpoint & Status Command** — Point Oh Dear, Better Stack or Uptime Kuma at a token-protected `/control-tower/health` (HTTP 200 when healthy, 503 while an alert fires or the alert checks have stalled), or run `php craft control-tower/status` from cron or CI (Nagios exit codes). Off until you set a token (see [Health endpoint](#health-endpoint-and-status-command)).
 - **Granular Permissions** — Three CP permissions (`viewDashboard`, `manageAlerts`, `manageSettings`) so editors and ops staff get scoped access without full admin rights.
 - **Overrideable Email Template** — Drop a `templates/_cp/_emails/alert.twig` into your project to fully customize alert emails.
 - **Dashboard Widget** — Configurable at-a-glance summary card with auto-refresh
@@ -82,6 +83,13 @@ After installation, visit **Control Tower > Settings** in the control panel to c
 |---------|---------|-------------|
 | Stale Content | 90 days | Days without update before an entry counts as stale (drives the `stale_content_count` metric) |
 
+### Health Endpoint
+
+| Setting | Default | Description |
+|---------|---------|-------------|
+| Health Token (`healthToken`) | empty (off) | Token for `/control-tower/health`; use an env var such as `$CONTROL_TOWER_HEALTH_TOKEN`. At least 32 characters |
+| Stalled Check Threshold (`healthMaxCheckAge`) | 30 minutes | Age of the last alert sweep after which the health report fails as `stale`. 0 turns it off |
+
 Alert thresholds are set per rule under **Control Tower → Alert Rules**, not in settings.
 
 ## Scheduled Jobs
@@ -110,6 +118,33 @@ Craft::$app->getQueue()->push(new CollectMetricsJob());
 Craft::$app->getQueue()->push(new RunAlertChecksJob());
 Craft::$app->getQueue()->push(new CleanupJob());
 ```
+
+## Health endpoint and status command
+
+For outside uptime monitors. Both return the same report: firing alerts, a few gauges (queue,
+CPU, memory, disk, database response time) and when the alert checks last ran.
+
+```bash
+php craft control-tower/status                    # exit 0 OK, 1 warning, 2 critical, 3 unknown
+php craft control-tower/status --fail-on=critical --json
+php craft control-tower/status --refresh          # run the alert checks first
+```
+
+The HTTP endpoint is **off until a token is set**. Put at least 32 random characters in `.env`
+and point the **Health Token** setting at it:
+
+```dotenv
+CONTROL_TOWER_HEALTH_TOKEN="…"   # openssl rand -hex 32
+```
+
+```bash
+curl -H "Authorization: Bearer $CONTROL_TOWER_HEALTH_TOKEN" https://example.com/control-tower/health
+```
+
+It answers 200 when healthy and 503 while any alert is firing (`?failOn=critical` to fail only on
+critical rules) or when the alert checks haven't run within the **Stalled Check Threshold**
+(30 minutes by default). A wrong or missing token gets a bare 401. The report holds no messages,
+hostnames, paths, versions or personal data. Full details in [`docs/health.md`](docs/health.md).
 
 ## Dashboard Widget
 
