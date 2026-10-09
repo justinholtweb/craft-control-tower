@@ -187,44 +187,62 @@ class AlertService extends Component
      */
     public function runChecks(): void
     {
+        foreach ($this->getRules(enabledOnly: true) as $rule) {
+            $this->checkRule($rule);
+        }
+    }
+
+    /**
+     * Evaluate one rule against its metric's current value, opening or resolving its alert.
+     * Returns the observed value, or null when the rule was skipped — its metric is no longer
+     * registered, or couldn't be measured this time.
+     */
+    public function checkRule(AlertRule $rule): ?float
+    {
         $registry = Plugin::getInstance()->metricRegistry;
 
-        foreach ($this->getRules(enabledOnly: true) as $rule) {
-            if (!$registry->has($rule->metric)) {
-                Craft::warning("Control Tower rule {$rule->id} references unknown metric “{$rule->metric}” — skipping.", __METHOD__);
-                continue;
-            }
-
-            $value = $registry->evaluate($rule->metric);
-            if ($value === null) {
-                continue;
-            }
-
-            $type = "rule_{$rule->id}";
-
-            if ($rule->evaluate($value)) {
-                $unit = $registry->get($rule->metric)['unit'] ?? '';
-                $valueStr = $this->_formatValue($value, $unit);
-                $thresholdStr = $this->_formatValue((float) $rule->threshold, $unit);
-                $message = "{$rule->name} — observed {$valueStr} (threshold {$rule->operator} {$thresholdStr}).";
-
-                $this->createAlert(
-                    type: $type,
-                    severity: $rule->severity,
-                    message: $message,
-                    context: [
-                        'metric' => $rule->metric,
-                        'operator' => $rule->operator,
-                        'threshold' => $rule->threshold,
-                        'observedValue' => $value,
-                        'unit' => $unit,
-                    ],
-                    ruleId: $rule->id,
-                );
-            } else {
-                $this->resolveAlert(type: $type, ruleId: $rule->id);
-            }
+        // A metric can disappear when the plugin or module that registered it is removed. The
+        // rule stays (shown as unavailable in the CP) and is skipped, never fatal.
+        $metric = $registry->get($rule->metric);
+        if ($metric === null) {
+            Craft::warning("Control Tower rule {$rule->id} references unknown metric “{$rule->metric}” — skipping.", __METHOD__);
+            return null;
         }
+
+        $value = $registry->evaluate($rule->metric);
+        if ($value === null) {
+            return null;
+        }
+
+        $type = "rule_{$rule->id}";
+
+        if ($rule->evaluate($value)) {
+            $unit = $metric->getUnit();
+            $valueStr = $registry->formatValue($value, $unit);
+            $thresholdStr = $registry->formatValue((float) $rule->threshold, $unit);
+            $window = $registry->describeWindow($metric->getWindow());
+            $message = "{$rule->name} — observed {$valueStr}" . ($window !== '' ? " in the {$window}" : '') . " (threshold {$rule->operator} {$thresholdStr}).";
+
+            $this->createAlert(
+                type: $type,
+                severity: $rule->severity,
+                message: $message,
+                context: [
+                    'metric' => $rule->metric,
+                    'metricLabel' => $metric->getLabel(),
+                    'operator' => $rule->operator,
+                    'threshold' => $rule->threshold,
+                    'observedValue' => $value,
+                    'unit' => $unit,
+                    'window' => $metric->getWindow(),
+                ],
+                ruleId: $rule->id,
+            );
+        } else {
+            $this->resolveAlert(type: $type, ruleId: $rule->id);
+        }
+
+        return $value;
     }
 
     public function cleanup(int $retentionDays = 90): int
@@ -314,11 +332,5 @@ class AlertService extends Component
         $rule->minNotifyInterval = (int) $record->minNotifyInterval;
         $rule->lastNotifiedAt = $record->lastNotifiedAt;
         return $rule;
-    }
-
-    private function _formatValue(float $value, string $unit): string
-    {
-        $rounded = abs($value - round($value)) < 0.01 ? (string) (int) round($value) : (string) round($value, 2);
-        return $unit === '%' ? "{$rounded}%" : trim("{$rounded} {$unit}");
     }
 }

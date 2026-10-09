@@ -98,6 +98,7 @@ class ApiController extends Controller
         $data = [
             'snapshot' => $plugin->metricsCollector->getCurrentSnapshot(),
             'health' => $plugin->metricsCollector->getServerHealth(),
+            'metrics' => $plugin->metricRegistry->snapshot(),
         ];
 
         if ($metric) {
@@ -134,6 +135,21 @@ class ApiController extends Controller
             'contentPipeline' => $plugin->contentHealth->getContentPipeline(),
             'topUrls' => $plugin->visitorTracking->getTopUrls(5),
             'editors_list' => $plugin->editorTracking->getActiveEditors($settings->editorTimeout),
+            // Only handles the registry knows are evaluated; anything else in the list is dropped.
+            'metrics' => $plugin->metricRegistry->snapshot($this->_metricHandles()),
         ]);
+    }
+
+    /**
+     * @return string[]
+     */
+    private function _metricHandles(): array
+    {
+        $raw = Craft::$app->getRequest()->getQueryParam('metrics', '');
+        if (!is_string($raw) || $raw === '') {
+            return [];
+        }
+
+        return array_slice(array_filter(array_map('trim', explode(',', $raw))), 0, 50);
     }
 }

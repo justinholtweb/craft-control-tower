@@ -9,7 +9,7 @@ class SlackFormatter
         $verb = $ctx->event === 'resolved' ? 'Resolved' : 'Firing';
         $headerText = "{$ctx->severityEmoji()} {$verb}: {$ctx->rule->name}";
 
-        $contextLine = "Site: *{$ctx->siteName}* · Env: *{$ctx->environment}* · Severity: *{$ctx->rule->severity}*";
+        $contextLine = "Site: *{$ctx->siteName}* · Env: *{$ctx->environment}* · Severity: *{$ctx->rule->severity}* · Metric: *{$ctx->metricLabel()}*";
 
         return [
             'text' => "[{$ctx->rule->severity}] {$verb}: {$ctx->rule->name} — {$ctx->alert->message}",

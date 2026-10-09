@@ -3,6 +3,7 @@
 namespace justinholtweb\controltower\models;
 
 use craft\base\Model;
+use justinholtweb\controltower\Plugin;
 
 class AlertRule extends Model
 {
@@ -36,7 +37,40 @@ class AlertRule extends Model
             [['threshold'], 'number'],
             [['minNotifyInterval'], 'integer', 'min' => 0],
             [['notifyEmails'], 'validateEmails'],
+            [['metric'], 'validateMetric'],
         ];
+    }
+
+    /**
+     * The metric must be registered right now, and accept the chosen operator. A rule whose metric
+     * has since been unregistered keeps loading and listing; it just can't be saved until it points
+     * at one that exists.
+     */
+    public function validateMetric(string $attribute): void
+    {
+        $registry = Plugin::getInstance()?->metricRegistry;
+        if ($registry === null || $this->metric === '') {
+            return;
+        }
+
+        $metric = $registry->get($this->metric);
+        if ($metric === null) {
+            $this->addError($attribute, "“{$this->metric}” is not an available metric. The plugin or module that provided it may have been removed.");
+            return;
+        }
+
+        if (!in_array($this->operator, $metric->getOperators(), true)) {
+            $this->addError('operator', "“{$metric->getLabel()}” can be compared with " . implode(' ', $metric->getOperators()) . " only.");
+        }
+    }
+
+    /**
+     * Whether this rule's metric is currently registered. Rules on a metric that has gone away are
+     * shown as unavailable and skipped by alert checks.
+     */
+    public function getIsMetricAvailable(): bool
+    {
+        return Plugin::getInstance()?->metricRegistry->has($this->metric) ?? false;
     }
 
     public function validateEmails(string $attribute): void

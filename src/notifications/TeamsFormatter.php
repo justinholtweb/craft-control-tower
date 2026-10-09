@@ -18,7 +18,7 @@ class TeamsFormatter
             ['title' => 'Status', 'value' => $verb],
             ['title' => 'Site', 'value' => $ctx->siteName],
             ['title' => 'Environment', 'value' => $ctx->environment],
-            ['title' => 'Metric', 'value' => $ctx->rule->metric],
+            ['title' => 'Metric', 'value' => $ctx->metricLabel()],
         ];
 
         return [

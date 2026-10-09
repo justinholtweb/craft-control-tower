@@ -18,7 +18,8 @@
         },
 
         refreshWidget: function (widget) {
-            const url = Craft.getActionUrl('control-tower/api/widget');
+            const metrics = widget.dataset.metrics || '';
+            const url = Craft.getActionUrl('control-tower/api/widget', metrics ? { metrics: metrics } : {});
 
             fetch(url, {
                 headers: {
@@ -43,6 +44,15 @@
             this.setStat(widget, 'ct-w-queue-waiting', data.queueSummary?.waiting);
             this.setStat(widget, 'ct-w-queue-failed', data.queueSummary?.failed);
             this.setStat(widget, 'ct-w-alerts', data.alertCount);
+
+            // Registered alert metrics chosen in the widget settings
+            Object.values(data.metrics || {}).forEach(metric => {
+                widget.querySelectorAll('[data-ct-metric]').forEach(el => {
+                    if (el.dataset.ctMetric === metric.handle) {
+                        el.textContent = metric.formatted;
+                    }
+                });
+            });
 
             // Update health badges
             const queueBadge = widget.querySelector('#ct-w-queue-health');

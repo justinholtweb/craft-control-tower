@@ -23,6 +23,7 @@
                     {% for rule in rules %}
                         {% set meta = registry[rule.metric] ?? null %}
                         {% set unit = meta ? meta.unit : '' %}
+                        {% set unitSuffix = unit == '%' ? '%' : (unit ? ' ' ~ unit : '') %}
                         <tr>
                             <td>
                                 <a href="{{ cpUrl('control-tower/rules/' ~ rule.id) }}">
@@ -32,9 +33,16 @@
                                     <div class="light ct-rule-description">{{ rule.description }}</div>
                                 {% endif %}
                             </td>
-                            <td>{{ meta ? meta.label : rule.metric }}</td>
                             <td>
-                                <code>{{ rule.operator }} {{ rule.threshold }}{{ unit == '%' ? '%' : (' ' ~ unit) }}</code>
+                                {% if meta %}
+                                    {{ meta.label }}
+                                {% else %}
+                                    <code>{{ rule.metric }}</code>
+                                    <div class="light ct-rule-description">Unavailable — no longer registered. This rule is skipped.</div>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <code>{{ rule.operator }} {{ rule.threshold }}{{ unitSuffix }}</code>
                             </td>
                             <td><span class="ct-badge ct-badge--{{ rule.severity }}">{{ rule.severity }}</span></td>
                             <td>
@@ -46,7 +54,9 @@
                                 {{ channels|length ? channels|join(', ') : '—' }}
                             </td>
                             <td>
-                                {% if rule.isEnabled %}
+                                {% if not meta %}
+                                    <span class="status orange"></span> Unavailable
+                                {% elseif rule.isEnabled %}
                                     <span class="status green"></span> Enabled
                                 {% else %}
                                     <span class="status"></span> Disabled

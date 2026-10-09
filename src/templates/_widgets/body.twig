@@ -1,4 +1,4 @@
-<div class="ct-widget" data-refresh-interval="{{ widget.refreshInterval }}">
+<div class="ct-widget" data-refresh-interval="{{ widget.refreshInterval }}" data-metrics="{{ metricCards|keys|join(',') }}">
     {# Top row — stat cards #}
     <div class="ct-grid ct-grid--stats ct-section ct-section--compact">
         {% if widget.showVisitors %}
@@ -44,6 +44,15 @@
                 <span class="ct-stat-card__value" id="ct-w-alerts">{{ alertCount }}</span>
             </div>
         {% endif %}
+        {% for card in metricCards %}
+            <div class="ct-stat-card">
+                <span class="ct-stat-card__label">{{ card.label }}</span>
+                <span class="ct-stat-card__value" data-ct-metric="{{ card.handle }}">{{ card.formatted }}</span>
+                {% if card.windowLabel %}
+                    <span class="ct-stat-card__meta">{{ card.windowLabel }}</span>
+                {% endif %}
+            </div>
+        {% endfor %}
     </div>
 
     {# Editors mini-list #}

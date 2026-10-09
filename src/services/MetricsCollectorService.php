@@ -56,6 +56,29 @@ class MetricsCollectorService extends Component
         ];
     }
 
+    // Single readings for the metric registry, so an alert check on one gauge doesn't pay for the
+    // whole snapshot (uptime and core count can shell out).
+
+    public function getCpuPercent(): ?float
+    {
+        return $this->_getCpuUsage();
+    }
+
+    public function getMemoryPercent(): ?float
+    {
+        return $this->_getMemoryUsage();
+    }
+
+    public function getDiskPercent(): ?float
+    {
+        return $this->_getDiskUsage();
+    }
+
+    public function getDbPingMs(): ?float
+    {
+        return $this->_getDbPingMs();
+    }
+
     public function getMetricTimeline(string $metric, string $period = '1h'): array
     {
         $since = match ($period) {

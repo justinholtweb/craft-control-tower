@@ -9,7 +9,7 @@ Live operational monitoring dashboard for Craft CMS 5. Know what's happening on 
 - **Content Health** — Entries by section, stale content detection, scheduled/expired entries, drafts awaiting attention, asset volume summaries
 - **Queue Watch** — Waiting/running/failed jobs, common failure patterns, queue health status
 - **System Pulse** — CPU, memory, disk, load average, DB response time, PHP info, uptime
-- **Configurable Alert Rules** — Build alerts in the CP, no config files. Each rule has a metric, operator, threshold, severity, and enable toggle. Queue failures, editor collisions, and server resource spikes ship as default rules — edit, disable, or add your own. Extensible metric registry covers queue depth, CPU / memory / disk %, collisions, active editor count, and stale content.
+- **Configurable Alert Rules** — Build alerts in the CP, no config files. Each rule has a metric, operator, threshold, severity, and enable toggle. Queue failures, editor collisions, and server resource spikes ship as default rules — edit, disable, or add your own. Eleven built-in metrics cover failed and pending queue jobs, CPU / memory / disk %, database response time, editor collisions, active editors, stale content, failed logins and critical updates — and the metric registry is extensible: other plugins and modules add their own through `MetricRegistryService::EVENT_REGISTER_METRICS`, and those appear in the rule editor, alert checks, System Pulse, the widget and webhook payloads exactly like the built-ins (see [Custom alert metrics](#custom-alert-metrics)).
 - **Webhook & Email Notifications** — Send alerts to Slack, Microsoft Teams (Power Automate / Adaptive Cards), Zapier, or any JSON receiver. Per-rule email recipients with admin-notify toggle. A **Send Test** button verifies delivery before you ship the rule. Flap throttling (`minNotifyInterval`) suppresses noisy repeats, and "notify on resolve" closes the loop. Notifications dispatch asynchronously via a queue job so SMTP / webhook latency never blocks a request.
 - **Granular Permissions** — Three CP permissions (`viewDashboard`, `manageAlerts`, `manageSettings`) so editors and ops staff get scoped access without full admin rights.
 - **Overrideable Email Template** — Drop a `templates/_cp/_emails/alert.twig` into your project to fully customize alert emails.
@@ -76,14 +76,13 @@ After installation, visit **Control Tower > Settings** in the control panel to c
 | Metric Samples | 30 days | |
 | Alert History | 90 days | |
 
-### Alert Thresholds
+### Content
 
 | Setting | Default | Description |
 |---------|---------|-------------|
-| Queue Failure Threshold | 3 | Failed jobs before triggering an alert |
-| 5xx Error Rate | 10/min | Errors per minute before alert |
-| 404 Spike | 50/min | 404s per minute before alert |
-| Stale Content | 90 days | Days without update before flagging |
+| Stale Content | 90 days | Days without update before an entry counts as stale (drives the `stale_content_count` metric) |
+
+Alert thresholds are set per rule under **Control Tower → Alert Rules**, not in settings.
 
 ## Scheduled Jobs
 
@@ -117,10 +116,53 @@ Craft::$app->getQueue()->push(new CleanupJob());
 Add the **Control Tower** widget to any user's dashboard. The widget is configurable:
 
 - Toggle visibility for each panel (visitors, editors, queue, server, alerts, content, top URLs)
+- Pick any alert metrics, including ones registered by other plugins or modules, to show as stat cards
 - Set a custom refresh interval
 - Resize to any column span
 
 The widget links to the full CP section for deeper investigation.
+
+## Custom alert metrics
+
+Any plugin or module can add metrics for alert rules to watch. Listen for
+`MetricRegistryService::EVENT_REGISTER_METRICS` and append to `$event->metrics`:
+
+```php
+use craft\elements\Entry;
+use justinholtweb\controltower\events\RegisterMetricsEvent;
+use justinholtweb\controltower\metrics\CallbackMetric;
+use justinholtweb\controltower\metrics\MetricPeriod;
+use justinholtweb\controltower\services\MetricRegistryService;
+use yii\base\Event;
+
+Event::on(
+    MetricRegistryService::class,
+    MetricRegistryService::EVENT_REGISTER_METRICS,
+    function(RegisterMetricsEvent $event) {
+        $event->metrics[] = new CallbackMetric([
+            'handle' => 'ops:entries_created',     // stored on rules: letters, digits, _ - . :
+            'label' => 'Content: entries created',
+            'unit' => 'entries',
+            'window' => 900,                       // seconds; omit for a point-in-time gauge
+            'operators' => ['>', '>=', '<', '<='], // comparisons that make sense
+            'evaluator' => fn(MetricPeriod $period) => Entry::find()
+                ->status(null)
+                ->dateCreated(['and', '>= ' . $period->start->format(DATE_ATOM), '< ' . $period->end->format(DATE_ATOM)])
+                ->count(),
+        ]);
+    }
+);
+```
+
+Every metric, built-in or registered, implements `justinholtweb\controltower\metrics\MetricInterface`
+(handle, label, unit, description, allowed operators, window, `getValue(MetricPeriod)`). Extend
+`Metric` for a class of your own, or register a `CallbackMetric` as above. An evaluator that throws
+or returns `null` makes rules on that metric skip the check; it never stops the rest. If the code
+that registered a metric goes away, rules on it are shown as **Unavailable** and skipped rather
+than failing.
+
+[`docs/metrics.md`](docs/metrics.md) has the full contract, the built-in metrics, and a complete
+example module (in [`docs/examples/opsmetrics`](docs/examples/opsmetrics)).
 
 ## Architecture
 
@@ -135,7 +177,10 @@ services/
   ContentHealthService     → Stale/scheduled/expired content, pipeline
   QueueMonitorService      → Queue health, failed jobs
   MetricsCollectorService  → CPU/memory/disk/DB, cross-platform
+  MetricRegistryService    → Alert metrics: built-ins + EVENT_REGISTER_METRICS
   AlertService             → Alert lifecycle, automated checks
+metrics/                → MetricInterface, Metric, CallbackMetric, MetricPeriod
+events/                 → RegisterMetricsEvent
 records/                → ActiveRecord models (6 tables)
 migrations/Install.php → Database schema
 jobs/                   → CleanupJob, CollectMetricsJob, RunAlertChecksJob

@@ -49,6 +49,15 @@
     on: widget.showTopUrls,
 }) }}
 
+{{ forms.checkboxGroupField({
+    label: 'Metrics',
+    instructions: 'Alert metrics to show as stat cards, including any registered by other plugins or modules.',
+    id: 'metrics',
+    name: 'metrics',
+    values: widget.getMetricHandles(),
+    options: metricOptions,
+}) }}
+
 {{ forms.textField({
     label: 'Refresh Interval (seconds)',
     id: 'refreshInterval',

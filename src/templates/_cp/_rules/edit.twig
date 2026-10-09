@@ -35,10 +35,15 @@
                         rows: 2,
                     }) }}
 
+                    {% set currentMetric = registry[rule.metric] ?? null %}
                     {% set metricOptions = [] %}
                     {% for key, meta in registry %}
                         {% set metricOptions = metricOptions|merge([{ label: meta.label, value: key }]) %}
                     {% endfor %}
+                    {% if rule.metric and not currentMetric %}
+                        {# Keep the stored handle selectable so the select doesn't silently swap it for the first option. #}
+                        {% set metricOptions = [{ label: rule.metric ~ ' (unavailable)', value: rule.metric }]|merge(metricOptions) %}
+                    {% endif %}
 
                     {{ forms.selectField({
                         label: 'Metric',
@@ -47,6 +52,10 @@
                         value: rule.metric,
                         options: metricOptions,
                         required: true,
+                        tip: currentMetric ? currentMetric.description : null,
+                        warning: rule.metric and not currentMetric
+                            ? 'The metric “' ~ rule.metric ~ '” is no longer registered — the plugin or module that provided it may have been removed. This rule is skipped until you choose an available metric.'
+                            : null,
                         errors: rule.getErrors('metric'),
                     }) }}
 

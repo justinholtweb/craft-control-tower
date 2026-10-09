@@ -83,6 +83,43 @@
         </div>
     </div>
 
+    {# Every registered alert metric — built-in and from other plugins/modules — with its value now. #}
+    <div class="ct-panel ct-section-after">
+        <div class="ct-panel__header">
+            <h3 class="ct-panel__title">Alert Metrics</h3>
+        </div>
+        <div class="ct-panel__body ct-panel__body--flush">
+            <table class="ct-table data fullwidth">
+                <thead>
+                    <tr>
+                        <th>Metric</th>
+                        <th>Handle</th>
+                        <th>Now</th>
+                        <th>Rules</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for m in alertMetrics %}
+                        <tr>
+                            <td>
+                                <strong>{{ m.label }}</strong>
+                                {% if m.description %}
+                                    <div class="light ct-rule-description">{{ m.description }}</div>
+                                {% endif %}
+                            </td>
+                            <td><code>{{ m.handle }}</code></td>
+                            <td>
+                                {{ m.formatted }}
+                                {% if m.windowLabel %}<span class="light">({{ m.windowLabel }})</span>{% endif %}
+                            </td>
+                            <td>{{ ruleCounts[m.handle] ?? 0 }}</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
     <div class="ct-toolbar ct-section-after">
         <button class="ct-period-btn active" data-period="15m">15m</button>
         <button class="ct-period-btn" data-period="1h">1h</button>

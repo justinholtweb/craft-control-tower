@@ -137,6 +137,8 @@ class DashboardController extends Controller
             'selectedTab' => 'system',
             'snapshot' => $plugin->metricsCollector->getCurrentSnapshot(),
             'serverHealth' => $plugin->metricsCollector->getServerHealth(),
+            'alertMetrics' => $plugin->metricRegistry->snapshot(),
+            'ruleCounts' => array_count_values(array_map(fn($rule) => $rule->metric, $plugin->alerts->getRules())),
         ]);
     }
 

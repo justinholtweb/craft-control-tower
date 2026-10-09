@@ -4,7 +4,9 @@ namespace justinholtweb\controltower\notifications;
 
 use Craft;
 use craft\helpers\UrlHelper;
+use justinholtweb\controltower\metrics\MetricInterface;
 use justinholtweb\controltower\models\AlertRule;
+use justinholtweb\controltower\Plugin;
 use justinholtweb\controltower\records\AlertRecord;
 
 /**
@@ -18,6 +20,8 @@ class NotificationContext
     public string $siteName;
     public string $environment;
     public string $alertUrl;
+    /** The rule's metric, or null when it is no longer registered. */
+    public ?MetricInterface $metric;
 
     public function __construct(string $event, AlertRecord $alert, AlertRule $rule)
     {
@@ -29,6 +33,15 @@ class NotificationContext
         // Alerts are sent from a queue job, which usually runs on the console — where the request
         // has no host. cpUrl() builds from baseCpUrl / the primary site instead.
         $this->alertUrl = UrlHelper::cpUrl('control-tower/alerts');
+        $this->metric = Plugin::getInstance()?->metricRegistry->get($rule->metric);
+    }
+
+    /**
+     * The metric's label, falling back to its handle once the metric is no longer registered.
+     */
+    public function metricLabel(): string
+    {
+        return $this->metric?->getLabel() ?? $this->rule->metric;
     }
 
     public function severityColorHex(): string

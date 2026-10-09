@@ -1,5 +1,25 @@
 # Release Notes for Control Tower
 
+## 5.3.0 - 2026-10-08
+
+### Added
+- **Custom alert metrics.** Plugins and modules can now add metrics for alert rules through `MetricRegistryService::EVENT_REGISTER_METRICS`. The README has always called the metric registry extensible; until now it was a fixed list. A registered metric appears everywhere the built-ins do: the rule editor, alert checks, System Pulse, the dashboard widget, the JSON API, and alert emails and webhooks. See `docs/metrics.md`, which includes a complete example module.
+- A metric contract, `MetricInterface`: handle, label, unit, description, the operators that make sense for it, an optional look-back window, and `getValue(MetricPeriod)`. Extend `Metric`, or register a `CallbackMetric` with an `evaluator`. The built-ins are defined the same way, so there is one path for both.
+- Three built-in metrics: `db_response_ms` (database round trip), `failed_logins` (accounts with a failed login in the last hour), and `critical_updates` (Craft and plugins with a critical release waiting, read from Craft's cached update info; Control Tower never calls out for it).
+- An **Alert Metrics** panel on System Pulse showing every registered metric, its value right now, and how many rules use it.
+- The widget can show any alert metrics as stat cards, and keeps them current on refresh.
+- Generic webhook payloads carry `metricLabel`, `metricUnit`, `metricWindow` and `metricAvailable`. Slack, Teams and email notifications show the metric's label instead of its handle.
+
+### Changed
+- `MetricRegistryService::all()` and `get()` return `MetricInterface` objects instead of arrays. Twig that reads `meta.label` or `meta.unit` keeps working.
+- A rule can only be saved with an operator its metric accepts. The percentage and millisecond gauges take `>`, `>=`, `<` and `<=`; counts take all five. Existing rules keep evaluating as before. One using `=` on a gauge only has to change when it is next saved.
+- A metric that can't be measured now has no value, and rules on it are skipped for that check. Before, an unreadable CPU, memory or disk figure counted as `0`, so a `<` rule could fire on it.
+- An exception or a non-finite result from any metric is logged and skipped, and the rest of the alert sweep carries on.
+
+### Fixed
+- A rule whose metric is no longer registered is listed as **Unavailable** and skipped by alert checks. Opening it shows a warning and keeps its stored metric selected; before, the editor silently swapped in the first metric in the list.
+- The README listed 5xx error rate and 404 spike thresholds under settings. Those settings stopped doing anything in 5.1.0, when alert rules replaced them, so they're gone from the docs.
+
 ## 5.2.0 - 2026-09-29
 
 ### Security

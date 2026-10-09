@@ -17,6 +17,13 @@ class ControlTowerWidget extends Widget
     public bool $showContent = true;
     public bool $showTopUrls = true;
     public int $refreshInterval = 30;
+    /**
+     * Alert metric handles to show as stat cards — any registered metric, built-in or not.
+     * A checkbox group posts '' when nothing is ticked, hence the union.
+     *
+     * @var string[]|string|null
+     */
+    public array|string|null $metrics = [];
 
     public static function displayName(): string
     {
@@ -47,6 +54,7 @@ class ControlTowerWidget extends Widget
     {
         return Craft::$app->getView()->renderTemplate('control-tower/_widgets/settings', [
             'widget' => $this,
+            'metricOptions' => Plugin::getInstance()->metricRegistry->options(),
         ]);
     }
 
@@ -78,7 +86,23 @@ class ControlTowerWidget extends Widget
             'topUrls' => $plugin->visitorTracking->getTopUrls(5),
             'editors' => $plugin->editorTracking->getActiveEditors($settings->editorTimeout),
             'contentPipeline' => $plugin->contentHealth->getContentPipeline(),
+            'metricCards' => $plugin->metricRegistry->snapshot($this->getMetricHandles()),
         ]);
+    }
+
+    /**
+     * The chosen metric handles, in the order they were saved. Handles whose metric is no longer
+     * registered are kept here (re-registering brings the card back) and skipped when rendering.
+     *
+     * @return string[]
+     */
+    public function getMetricHandles(): array
+    {
+        if (!is_array($this->metrics)) {
+            return [];
+        }
+
+        return array_values(array_filter(array_map('strval', $this->metrics), fn($h) => $h !== ''));
     }
 
     protected function defineRules(): array
