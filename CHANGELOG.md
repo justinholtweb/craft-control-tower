@@ -1,7 +1,6 @@
 # Release Notes for Control Tower
 
-## Unreleased
-
+## 5.4.0 - 2026-10-09
 ### Added
 - **Health endpoint for uptime monitors.** `/control-tower/health` returns a JSON report of firing alerts and key gauges for Oh Dear, Better Stack, Uptime Kuma and the like: HTTP 200 when healthy, 503 while an alert is firing or the alert checks have stalled. It is off until a **Health Token** of at least 32 characters is set, ideally as an environment variable (`$CONTROL_TOWER_HEALTH_TOKEN`). Monitors send it as `Authorization: Bearer …`, `X-Control-Tower-Token` or `?key=`, and it is compared exactly and in constant time. The report carries no alert messages, hostnames, paths, versions or personal data. See `docs/health.md`.
 - **`php craft control-tower/status`.** The same report on the command line, exiting 0 (OK), 1 (warning), 2 (critical) or 3 (unknown) in the Nagios convention. `--fail-on=critical` fails only on critical rules, `--json` prints the endpoint's JSON, and `--refresh` runs the alert checks before reporting.
