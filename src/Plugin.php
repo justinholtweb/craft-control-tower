@@ -54,7 +54,7 @@ class Plugin extends BasePlugin
     /** Site route of the health endpoint. */
     public const HEALTH_PATH = 'control-tower/health';
 
-    public string $schemaVersion = '1.2.0';
+    public string $schemaVersion = '1.3.0';
     public bool $hasCpSection = true;
     public bool $hasCpSettings = true;
 
