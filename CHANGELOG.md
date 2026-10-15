@@ -1,5 +1,10 @@
 # Release Notes for Control Tower
 
+## 5.4.1 - 2026-10-15
+
+### Fixed
+- **Fresh installs now create the alert rules and webhooks tables.** They were defined only in the `alerts_v1` migration, which Craft marks as applied on install without running it. Every site installed on 5.x was missing `controltower_alert_rules`, `controltower_webhooks`, the `alertRuleId` column on alerts and the five default rules, so anything touching alert rules or webhooks failed with "Base table or view not found" ([#4](https://github.com/justinholtweb/craft-control-tower/issues/4)). The install migration now creates them. A new migration adds whatever is missing on sites that are already installed, and it skips sites that have the tables. It only seeds the default rules when it creates the rules table, so rules you deleted stay deleted.
+
 ## 5.4.0 - 2026-10-09
 ### Added
 - **Health endpoint for uptime monitors.** `/control-tower/health` returns a JSON report of firing alerts and key gauges for Oh Dear, Better Stack, Uptime Kuma and the like: HTTP 200 when healthy, 503 while an alert is firing or the alert checks have stalled. It is off until a **Health Token** of at least 32 characters is set, ideally as an environment variable (`$CONTROL_TOWER_HEALTH_TOKEN`). Monitors send it as `Authorization: Bearer …`, `X-Control-Tower-Token` or `?key=`, and it is compared exactly and in constant time. The report carries no alert messages, hostnames, paths, versions or personal data. See `docs/health.md`.
